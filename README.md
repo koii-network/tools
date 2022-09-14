@@ -57,7 +57,7 @@ Note: This library changes often, so if `npm i @_koi/sdk` does not work, check f
    var walletKeyLocation = "path/to/wallet.json";
    ```
 
-   If you don't have a Koii wallet, check the tutorial and get one from the faucet at [Koii Wiki](https://docs.koii.network/microservices-and-tasks/task-development-guide/task-development-flow/creating-a-wallet).
+   If you don't have a Koii wallet, get one from the faucet at [koi.rocks](https://koi.rocks/faucet).
 
 5. Define a function to bootstrap your app and utilize the koi-tools `loadWallet`.
 
