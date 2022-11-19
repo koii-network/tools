@@ -7,6 +7,7 @@ The Koi.js library enables node.js and javascript/typescript applications to eas
 1. Add the sdk to your project
 
    You can use either npm or yarn
+
    ```
    npm i @_koi/sdk
    yarn add @_koi/sdk
@@ -18,12 +19,16 @@ The Koi.js library enables node.js and javascript/typescript applications to eas
    import * as kweb from "@_koi/sdk/web.js";
    const tools = new kweb.Web();
    ```
+
    or with CommonJS
+
    ```
    const kweb = require("@_koi/sdk/web");
    const tools = new kweb.Web();
    ```
+
    or using the bundle
+
    ```
    <script src="koi_tools.js"></script>
    ...
@@ -52,7 +57,7 @@ Note: This library changes often, so if `npm i @_koi/sdk` does not work, check f
    var walletKeyLocation = "path/to/wallet.json";
    ```
 
-   If you don't have a wallet, you can get one from the faucet at [koi.rocks](https://koi.rocks/) or the Arweave faucet at [faucet.arweave.org](https://faucet.arweave.org/).
+   If you don't have a Koii wallet, get one from the faucet at [koi.rocks](https://koi.rocks/faucet).
 
 5. Define a function to bootstrap your app and utilize the koi-tools `loadWallet`.
 
@@ -81,8 +86,9 @@ yarn publish dist
 ```
 
 For beta releases
- - append `-beta.N` to `dist/package.json` version where N is the beta version
- - use `yarn publish dist --tag beta`
+
+- append `-beta.N` to `dist/package.json` version where N is the beta version
+- use `yarn publish dist --tag beta`
 
 Test with `yarn test`
 
