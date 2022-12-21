@@ -16,15 +16,15 @@ test("Get block height", async () => {
   expect(await ktools.getBlockHeight()).toBeGreaterThan(0);
 });
 
-test("Mint", async () => {
-  const submission = {
-    targetAddress: "D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo",
-    qty: 5
-  };
-  const txId = await ktools.mint(submission);
-  expect(typeof txId).toBe("string");
-  expect(txId.trim()).not.toHaveLength(0);
-});
+// test("Mint", async () => {
+//   const submission = {
+//     targetAddress: "D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo",
+//     qty: 5
+//   };
+//   const txId = await ktools.mint(submission);
+//   expect(typeof txId).toBe("string");
+//   expect(txId.trim()).not.toHaveLength(0);
+// });
 
 test("Sign payload", async () => {
   let payload = {
@@ -112,6 +112,13 @@ test("Get attentionId", async () => {
   const attentionId = await ktools.getAttentionId();
   expect(typeof attentionId).toEqual("string");
   expect(attentionId.length).toEqual(43);
+});
+
+test("Generate Keys from mnemonic", async () => {
+  const mnemonic = "pill tomorrow foster begin walnut borrow virtual kick shift mutual shoe scatter";
+  const wallet = await ktools._generateSolanaKeyFromMnemonic(mnemonic);
+  expect(typeof wallet.address).toEqual("string");
+  expect(typeof wallet.privateKey).toEqual("string");
 });
 
 // test("generate mnemonic", async () => {

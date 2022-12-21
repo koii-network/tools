@@ -1261,7 +1261,8 @@ export class Common {
     return privateKey;
   }
 
-  async _generateSolanaKeyFromMnemonic(mnemonic: string) {
+  async _generateSolanaKeyFromMnemonic(mnemonic: string): Promise<{address: string,
+      privateKey: string}> {
     let wallet;
     let keyPair;
     let seed: Buffer;
@@ -1277,12 +1278,11 @@ export class Common {
 
     seed = mnemonicToSeedSync(mnemonic);
     keyPair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
-
     /* 
         Pick first has balance address or first address
       */
     const connection = new Connection(
-      "http://solana-mainnet.g.alchemy.com/v2/Ofyia5hQc-c-yfWwI4C9Qa0UcJ5lewDy",
+      "https://solana-mainnet.g.alchemy.com/v2/Ofyia5hQc-c-yfWwI4C9Qa0UcJ5lewDy",
       "confirmed"
     );
     const balance = await connection.getBalance(keyPair.publicKey);
@@ -1305,10 +1305,11 @@ export class Common {
     }
 
     this.address = keyPair.publicKey.toString();
+    const privateKey = keyPair.secretKey.toString();
 
     wallet = {
       address: this.address,
-      privateKey: keyPair.secretKey.toString()
+      privateKey: privateKey,
     };
 
     return wallet;
