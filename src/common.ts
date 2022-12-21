@@ -5,6 +5,9 @@ import { JWKInterface } from "arweave/node/lib/wallet";
 import * as arweaveUtils from "arweave/node/lib/utils";
 import Transaction from "arweave/node/lib/transaction";
 import Web3 from "web3";
+import { derivePath } from "ed25519-hd-key";
+import { Connection, Keypair } from "@solana/web3.js";
+import { mnemonicToSeedSync } from "bip39";
 import { interactWrite } from "smartweave/lib/contract-interact";
 //@ts-ignore // Needed to allow implicit unknown here
 import { generateKeyPair, getKeyPairFromMnemonic } from "human-crypto-keys";
@@ -48,7 +51,6 @@ const BLOCK_TEMPLATE = `
     }
   }`;
 
-
 /**
  * Tools for interacting with the koi network
  */
@@ -71,13 +73,15 @@ export class Common {
   ) {
     this.bundlerUrl = bundlerUrl;
     this.contractId = contractId;
-    this.arweave = arweave || Arweave.init({
-      host: "this.arweave.net",
-      protocol: "https",
-      port: 443,
-      logging: false
-    });
-    this.arweaveRateLimit = arweaveRateLimit
+    this.arweave =
+      arweave ||
+      Arweave.init({
+        host: "this.arweave.net",
+        protocol: "https",
+        port: 443,
+        logging: false
+      });
+    this.arweaveRateLimit = arweaveRateLimit;
     console.log(
       "Initialized Koii Tools for true ownership and direct communication using version",
       this.contractId
@@ -363,7 +367,8 @@ export class Common {
     } else {
       try {
         const resp: any = await axios.get(
-          `https://api${network == "RINKEBY" ? "-rinkeby" : ""
+          `https://api${
+            network == "RINKEBY" ? "-rinkeby" : ""
           }.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&page=1&offset=${offset}&sort=asc&apikey=${APIKey}`
         );
         return (resp.data && resp.data.result) || [];
@@ -418,7 +423,7 @@ export class Common {
    * @returns Block height maybe number
    */
   async getBlockHeight(): Promise<unknown> {
-    const info = await this.arweave.network.getInfo() as any;
+    const info = (await this.arweave.network.getInfo()) as any;
     return info.height;
   }
 
@@ -475,7 +480,10 @@ export class Common {
     switch (token) {
       case "AR": {
         const transaction = await this.arweave.createTransaction(
-          { target: target, quantity: this.arweave.ar.arToWinston(qty.toString()) },
+          {
+            target: target,
+            quantity: this.arweave.ar.arToWinston(qty.toString())
+          },
           this.wallet
         );
         await this.arweave.transactions.sign(transaction, this.wallet);
@@ -892,7 +900,9 @@ export class Common {
    */
   async gql(request: string): Promise<any> {
     const config = this.arweave.api.config;
-    const gqlUrl = `${config.protocol || "https"}://${config.host || "arweave.net"}/graphql`;
+    const gqlUrl = `${config.protocol || "https"}://${
+      config.host || "arweave.net"
+    }/graphql`;
     const { data } = await axios.post(gqlUrl, request, {
       headers: { "content-type": "application/json" }
     });
@@ -1249,6 +1259,72 @@ export class Common {
     delete privateKey.alg;
     delete privateKey.key_ops;
     return privateKey;
+  }
+
+  async _generateSolanaKeyFromMnemonic(mnemonic: string) {
+    let wallet;
+    let keyPair;
+    let seed: Buffer;
+
+    const bufferToString = (buffer: Buffer) =>
+      Buffer.from(buffer).toString("hex");
+    const DEFAULT_DERIVE_PATH = `m/44'/501'/0'/0'`; // from phantom
+
+    const derivePathList = this.#getDerivePathList();
+
+    const deriveSeed = (seed: string) =>
+      derivePath(DEFAULT_DERIVE_PATH, seed).key;
+
+    seed = mnemonicToSeedSync(mnemonic);
+    keyPair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
+
+    /* 
+        Pick first has balance address or first address
+      */
+    const connection = new Connection(
+      "http://solana-mainnet.g.alchemy.com/v2/Ofyia5hQc-c-yfWwI4C9Qa0UcJ5lewDy",
+      "confirmed"
+    );
+    const balance = await connection.getBalance(keyPair.publicKey);
+
+    if (balance === 0) {
+      for (const path of derivePathList) {
+        try {
+          const _keypair = Keypair.fromSeed(
+            derivePath(path, bufferToString(seed)).key
+          );
+          const _balance = await connection.getBalance(_keypair.publicKey);
+          if (_balance > 0) {
+            keyPair = _keypair;
+            break;
+          }
+        } catch (err: any) {
+          console.error("ERROR: ", err.message);
+        }
+      }
+    }
+
+    this.address = keyPair.publicKey.toString();
+
+    wallet = {
+      address: this.address,
+      privateKey: keyPair.secretKey.toString()
+    };
+
+    return wallet;
+  }
+  #getDerivePathList() {
+    const derivePathList = [];
+
+    for (let i = 0; i < 20; i++) {
+      const solanaPath = `m/44'/501'/${i}'/0'`;
+      const solflarePath = `m/44'/501'/${i}'`;
+
+      derivePathList.push(solanaPath);
+      derivePathList.push(solflarePath);
+    }
+
+    return derivePathList;
   }
 }
 
