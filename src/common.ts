@@ -1261,6 +1261,12 @@ export class Common {
     return privateKey;
   }
 
+    /**
+   * Generates a JWK object representation of an Arweave key
+   * @param mnemonic - a 12 word mnemonic represented as a string
+   * @returns {object} - returns a Javascript object that contains address and privateKey
+   */
+
   async _generateSolanaKeyFromMnemonic(mnemonic: string): Promise<{address: string,
       privateKey: string}> {
     let wallet;
