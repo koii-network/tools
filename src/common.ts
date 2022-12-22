@@ -64,7 +64,7 @@ export class Common {
   evmWalletAddress?: string;
   arweave: Arweave;
   arweaveRateLimit: number;
-
+  defaultDerivePath = `m/44'/501'/0'/0'`; // from phantom
   constructor(
     bundlerUrl = "https://mainnet.koii.live",
     contractId = "QA7AIFVx1KBBmzC7WUNhJbDsHlSJArUT0jWrhZMZPS8",
@@ -1261,28 +1261,26 @@ export class Common {
     return privateKey;
   }
 
-    /**
-   * Generates a JWK object representation of an Arweave key
+  /**
+   * Generates a public and private key from Solana Mnemonic
    * @param mnemonic - a 12 word mnemonic represented as a string
    * @returns {object} - returns a Javascript object that contains address and privateKey
    */
 
-  async _generateSolanaKeyFromMnemonic(mnemonic: string): Promise<{address: string,
-      privateKey: string}> {
-    let wallet;
+  async generateSolanaKeyFromMnemonic(
+    mnemonic: string
+  ): Promise<{ address: string; privateKey: string }> {
     let keyPair;
-    let seed: Buffer;
 
     const bufferToString = (buffer: Buffer) =>
       Buffer.from(buffer).toString("hex");
-    const DEFAULT_DERIVE_PATH = `m/44'/501'/0'/0'`; // from phantom
 
     const derivePathList = this.#getDerivePathList();
 
     const deriveSeed = (seed: string) =>
-      derivePath(DEFAULT_DERIVE_PATH, seed).key;
+    derivePath(this.defaultDerivePath, seed).key;
 
-    seed = mnemonicToSeedSync(mnemonic);
+    const seed = mnemonicToSeedSync(mnemonic);
     keyPair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
     /* 
         Pick first has balance address or first address
@@ -1313,17 +1311,17 @@ export class Common {
     this.address = keyPair.publicKey.toString();
     const privateKey = keyPair.secretKey.toString();
 
-    wallet = {
+    const wallet = {
       address: this.address,
-      privateKey: privateKey,
+      privateKey: privateKey
     };
 
     return wallet;
   }
-  #getDerivePathList() {
+  #getDerivePathList(loopsNum = 20) {
     const derivePathList = [];
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < loopsNum; i++) {
       const solanaPath = `m/44'/501'/${i}'/0'`;
       const solflarePath = `m/44'/501'/${i}'`;
 
