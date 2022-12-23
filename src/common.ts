@@ -64,7 +64,6 @@ export class Common {
   evmWalletAddress?: string;
   arweave: Arweave;
   arweaveRateLimit: number;
-  defaultDerivePath = `m/44'/501'/0'/0'`; // from phantom
   constructor(
     bundlerUrl = "https://mainnet.koii.live",
     contractId = "QA7AIFVx1KBBmzC7WUNhJbDsHlSJArUT0jWrhZMZPS8",
@@ -1268,7 +1267,8 @@ export class Common {
    */
 
   async generateSolanaKeyFromMnemonic(
-    mnemonic: string
+    mnemonic: string,
+    defaultDerivePath = `m/44'/501'/0'/0'`
   ): Promise<{ address: string; privateKey: string }> {
     let keyPair;
 
@@ -1278,7 +1278,7 @@ export class Common {
     const derivePathList = this.#getDerivePathList();
 
     const deriveSeed = (seed: string) =>
-    derivePath(this.defaultDerivePath, seed).key;
+    derivePath(defaultDerivePath, seed).key;
 
     const seed = mnemonicToSeedSync(mnemonic);
     keyPair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
