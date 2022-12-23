@@ -6,7 +6,7 @@ import * as arweaveUtils from "arweave/node/lib/utils";
 import Transaction from "arweave/node/lib/transaction";
 import Web3 from "web3";
 import { derivePath } from "ed25519-hd-key";
-import { Connection, Keypair } from "@solana/web3.js";
+import { Connection, Keypair } from "@_koi/web3.js";
 import { mnemonicToSeedSync } from "bip39";
 import { interactWrite } from "smartweave/lib/contract-interact";
 //@ts-ignore // Needed to allow implicit unknown here

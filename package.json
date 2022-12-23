@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@_koi/kohaku": "^1.1.1",
-    "@solana/web3.js": "^1.70.3",
+    "@_koi/web3.js": "^0.0.6",
     "arweave": "^1.10.18",
     "axios": "^0.23.0",
     "bip39": "^3.0.4",
