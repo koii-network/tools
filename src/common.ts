@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from "axios";
-import Arweave from "arweave";
+import axiosAdapter from "@vespaiach/axios-fetch-adapter";
+import Arweave from "arweave/node";
 import smartweave from "smartweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import * as arweaveUtils from "arweave/node/lib/utils";
@@ -10,6 +11,8 @@ import { interactWrite } from "smartweave/lib/contract-interact";
 import { generateKeyPair, getKeyPairFromMnemonic } from "human-crypto-keys";
 //@ts-ignore
 import { pem2jwk } from "pem-jwk";
+
+import { ethers } from "ethers";
 
 export interface BundlerPayload {
   data?: unknown;
@@ -88,7 +91,9 @@ export class Common {
    * @returns Current KOI system state
    */
   async getKoiiState(): Promise<any> {
-    const response = await axios.get(this.bundlerUrl + "/state");
+    const response = await axios.get(this.bundlerUrl + "/state", {
+      adapter: axiosAdapter
+    });
     if (response.data) return response.data;
   }
 
@@ -107,7 +112,11 @@ export class Common {
    * @returns The contract state object
    */
   async getState(txId: string): Promise<any> {
-    return (await axios.get(this.bundlerUrl + `/${txId}`)).data;
+    return (
+      await axios.get(this.bundlerUrl + `/${txId}`, {
+        adapter: axiosAdapter
+      })
+    ).data;
   }
 
   /**
@@ -118,7 +127,11 @@ export class Common {
    * @returns State of an NFT including views and reward
    */
   async getNftState(id: string): Promise<any> {
-    return (await axios.get(this.bundlerUrl + `/attention/nft?id=${id}`)).data;
+    return (
+      await axios.get(this.bundlerUrl + `/attention/nft?id=${id}`, {
+        adapter: axiosAdapter
+      })
+    ).data;
   }
 
   /**
@@ -153,7 +166,11 @@ export class Common {
    * @returns Attention contract ID running on the bundler as a string
    */
   async getAttentionId(): Promise<string> {
-    return (await axios.get(this.bundlerUrl + "/attention/id")).data as string;
+    return (
+      await axios.get(this.bundlerUrl + "/attention/id", {
+        adapter: axiosAdapter
+      })
+    ).data as string;
   }
 
   /**
@@ -218,6 +235,26 @@ export class Common {
     this.web3 = new Web3(evmNetworkProvider);
     return this.evmWalletAddress;
   }
+  initializeEthWalletAndProvider(
+    walletAddress: string,
+    evmNetworkProvider: string
+  ): string {
+    if (!this.evmWalletAddress) this.evmWalletAddress = walletAddress;
+    if (!evmNetworkProvider)
+      throw Error("EVM compatible Network Provider not provided in parameter");
+
+    const split = evmNetworkProvider.split("/");
+    const apiKey = split[4];
+    const networkName = split[2].split(".")[0];
+
+    const network = ethers.providers.getNetwork(networkName);
+
+    const provider = new ethers.providers.InfuraProvider(network, apiKey);
+
+    this.web3 = provider;
+
+    return this.evmWalletAddress;
+  }
 
   /**
    * Gets EVM compatible wallet balance
@@ -248,7 +285,20 @@ export class Common {
     const totalGasInWei = gasPrice * estimateGas;
     return this.web3.utils.fromWei(totalGasInWei.toString(), "ether");
   }
+  async estimateGasEth(object: unknown): Promise<number> {
+    if (!this.web3) {
+      throw Error("EVM compatible Wallet and Network not initialized");
+    }
+    if (!object) {
+      throw Error("EVM compatible private key not provided");
+    }
 
+    const gasPrice = await this.web3.getGasPrice();
+    const estimateGas = await this.web3.estimateGas(object);
+
+    const totalGasInWei = gasPrice * estimateGas;
+    return totalGasInWei;
+  }
   /**
    * Estimates the gas fees required for this particular tx
    * @param toAddress The address whom to send the currency
@@ -283,6 +333,30 @@ export class Common {
     const receipt = await this.web3.eth.sendSignedTransaction(
       signTx.rawTransaction
     );
+    return receipt;
+  }
+  async transferEth(
+    toAddress: string,
+    amount: number,
+    privateKey: string
+  ): Promise<unknown> {
+    if (!this.web3) {
+      throw Error("EVM compatible Wallet and Network not initialized");
+    }
+    if (!this.evmWalletAddress) {
+      throw Error("EVM compatible Wallet Address is not set");
+    }
+
+    const amountToSend = amount * 1000000000000000000;
+
+    const rawTx = {
+      to: toAddress,
+      value: amountToSend
+    };
+
+    const signer = new ethers.Wallet(privateKey, this.web3);
+
+    const receipt = await signer.sendTransaction(rawTx);
     return receipt;
   }
   /**
@@ -372,6 +446,7 @@ export class Common {
       }
     }
   }
+
   /**
    * Uses koi wallet to get the address
    * @returns Wallet address
@@ -891,7 +966,8 @@ export class Common {
    */
   async gql(request: string): Promise<any> {
     const { data } = await axios.post(URL_ARWEAVE_GQL, request, {
-      headers: { "content-type": "application/json" }
+      headers: { "content-type": "application/json" },
+      adapter: axiosAdapter
     });
     return data;
   }
@@ -904,7 +980,7 @@ export class Common {
   async getNodes(
     url: string = this.bundlerUrl
   ): Promise<Array<BundlerPayload>> {
-    const res = await axios.get(url + BUNDLER_NODES);
+    const res = await axios.get(url + BUNDLER_NODES, { adapter: axiosAdapter });
     try {
       return JSON.parse(res.data as string);
     } catch (_e) {
@@ -1254,7 +1330,9 @@ export class Common {
  * @returns Axios response with info
  */
 function getArweaveNetInfo(): Promise<AxiosResponse<any>> {
-  return axios.get(URL_ARWEAVE_INFO);
+  return axios.get(URL_ARWEAVE_INFO, {
+    adapter: axiosAdapter
+  });
 }
 
 module.exports = {
