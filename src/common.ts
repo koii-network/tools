@@ -1289,23 +1289,25 @@ export class Common {
       "https://solana-mainnet.g.alchemy.com/v2/Ofyia5hQc-c-yfWwI4C9Qa0UcJ5lewDy",
       "confirmed"
     );
-    const balance = await connection.getBalance(keyPair.publicKey);
+    if(connection) {
+        const balance = await connection.getBalance(keyPair.publicKey);
 
-    if (balance === 0) {
-      for (const path of derivePathList) {
-        try {
-          const _keypair = Keypair.fromSeed(
-            derivePath(path, bufferToString(seed)).key
-          );
-          const _balance = await connection.getBalance(_keypair.publicKey);
-          if (_balance > 0) {
-            keyPair = _keypair;
-            break;
+        if (balance === 0) {
+          for (const path of derivePathList) {
+            try {
+              const _keypair = Keypair.fromSeed(
+                derivePath(path, bufferToString(seed)).key
+              );
+              const _balance = await connection.getBalance(_keypair.publicKey);
+              if (_balance > 0) {
+                keyPair = _keypair;
+                break;
+              }
+            } catch (err: any) {
+              console.error("ERROR: ", err.message);
+            }
           }
-        } catch (err: any) {
-          console.error("ERROR: ", err.message);
         }
-      }
     }
 
     this.address = keyPair.publicKey.toString();

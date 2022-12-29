@@ -84,7 +84,7 @@ async function testNftTransactionData() {
 }
 
 async function testGenerateSolanaKeysFromMnemonics() {
-  console.log("Testing nftTransactionData 2");
+  console.log("Testing solanaKeysFromMnemonics");
   const mnemonic = "pill tomorrow foster begin walnut borrow virtual kick shift mutual shoe scatter";
   const wallet = await kweb._generateSolanaKeyFromMnemonic(mnemonic);
   console.log(wallet);
