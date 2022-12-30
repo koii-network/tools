@@ -1275,40 +1275,11 @@ export class Common {
     const bufferToString = (buffer: Buffer) =>
       Buffer.from(buffer).toString("hex");
 
-    const derivePathList = this.#getDerivePathList();
-
     const deriveSeed = (seed: string) =>
-    derivePath(defaultDerivePath, seed).key;
+      derivePath(defaultDerivePath, seed).key;
 
     const seed = mnemonicToSeedSync(mnemonic);
     keyPair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
-    /* 
-        Pick first has balance address or first address
-      */
-    const connection = new Connection(
-      "https://solana-mainnet.g.alchemy.com/v2/Ofyia5hQc-c-yfWwI4C9Qa0UcJ5lewDy",
-      "confirmed"
-    );
-    if(connection) {
-        const balance = await connection.getBalance(keyPair.publicKey);
-
-        if (balance === 0) {
-          for (const path of derivePathList) {
-            try {
-              const _keypair = Keypair.fromSeed(
-                derivePath(path, bufferToString(seed)).key
-              );
-              const _balance = await connection.getBalance(_keypair.publicKey);
-              if (_balance > 0) {
-                keyPair = _keypair;
-                break;
-              }
-            } catch (err: any) {
-              console.error("ERROR: ", err.message);
-            }
-          }
-        }
-    }
 
     this.address = keyPair.publicKey.toString();
     const privateKey = keyPair.secretKey.toString();
@@ -1317,21 +1288,8 @@ export class Common {
       address: this.address,
       privateKey: privateKey
     };
-
+    
     return wallet;
-  }
-  #getDerivePathList(loopsNum = 20) {
-    const derivePathList = [];
-
-    for (let i = 0; i < loopsNum; i++) {
-      const solanaPath = `m/44'/501'/${i}'/0'`;
-      const solflarePath = `m/44'/501'/${i}'`;
-
-      derivePathList.push(solanaPath);
-      derivePathList.push(solflarePath);
-    }
-
-    return derivePathList;
   }
 }
 
