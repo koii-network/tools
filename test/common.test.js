@@ -114,6 +114,13 @@ test("Get attentionId", async () => {
   expect(attentionId.length).toEqual(43);
 });
 
+test("Generate Keys from mnemonic", async () => {
+  const mnemonic = "pill tomorrow foster begin walnut borrow virtual kick shift mutual shoe scatter";
+  const wallet = await ktools.generateSolanaKeyFromMnemonic(mnemonic);
+  expect(typeof wallet.address).toEqual("string");
+  expect(typeof wallet.privateKey).toEqual("string");
+});
+
 // test("generate mnemonic", async () => {
 //   expect(await ktools.generateWallet(true)).toBeTruthy();
 // });

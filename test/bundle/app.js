@@ -14,6 +14,7 @@ async function test() {
   await testMint();
   await testMyContent();
   await testNftTransactionData();
+  await testGenerateSolanaKeysFromMnemonics();
 
   return true;
 }
@@ -79,6 +80,16 @@ async function testNftTransactionData() {
   console.log(txData);
   if (typeof txData === "undefined" || txData === null) {
     throw Error("The address function returned ");
+  }
+}
+
+async function testGenerateSolanaKeysFromMnemonics() {
+  console.log("Testing solanaKeysFromMnemonics");
+  const mnemonic = "pill tomorrow foster begin walnut borrow virtual kick shift mutual shoe scatter";
+  const wallet = await kweb._generateSolanaKeyFromMnemonic(mnemonic);
+  console.log(wallet);
+   if (typeof wallet === "undefined" || wallet === null) {
+    throw Error("The Generate PrivateKey and Public from Mnemonic function returned ");
   }
 }
 

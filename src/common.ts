@@ -5,6 +5,9 @@ import { JWKInterface } from "arweave/node/lib/wallet";
 import * as arweaveUtils from "arweave/node/lib/utils";
 import Transaction from "arweave/node/lib/transaction";
 import Web3 from "web3";
+import { derivePath } from "ed25519-hd-key";
+import { Connection, Keypair } from "@_koi/web3.js";
+import { mnemonicToSeedSync } from "bip39";
 import { interactWrite } from "smartweave/lib/contract-interact";
 //@ts-ignore // Needed to allow implicit unknown here
 import { generateKeyPair, getKeyPairFromMnemonic } from "human-crypto-keys";
@@ -48,7 +51,6 @@ const BLOCK_TEMPLATE = `
     }
   }`;
 
-
 /**
  * Tools for interacting with the koi network
  */
@@ -62,7 +64,6 @@ export class Common {
   evmWalletAddress?: string;
   arweave: Arweave;
   arweaveRateLimit: number;
-
   constructor(
     bundlerUrl = "https://mainnet.koii.live",
     contractId = "QA7AIFVx1KBBmzC7WUNhJbDsHlSJArUT0jWrhZMZPS8",
@@ -71,13 +72,15 @@ export class Common {
   ) {
     this.bundlerUrl = bundlerUrl;
     this.contractId = contractId;
-    this.arweave = arweave || Arweave.init({
-      host: "this.arweave.net",
-      protocol: "https",
-      port: 443,
-      logging: false
-    });
-    this.arweaveRateLimit = arweaveRateLimit
+    this.arweave =
+      arweave ||
+      Arweave.init({
+        host: "this.arweave.net",
+        protocol: "https",
+        port: 443,
+        logging: false
+      });
+    this.arweaveRateLimit = arweaveRateLimit;
     console.log(
       "Initialized Koii Tools for true ownership and direct communication using version",
       this.contractId
@@ -363,7 +366,8 @@ export class Common {
     } else {
       try {
         const resp: any = await axios.get(
-          `https://api${network == "RINKEBY" ? "-rinkeby" : ""
+          `https://api${
+            network == "RINKEBY" ? "-rinkeby" : ""
           }.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&page=1&offset=${offset}&sort=asc&apikey=${APIKey}`
         );
         return (resp.data && resp.data.result) || [];
@@ -418,7 +422,7 @@ export class Common {
    * @returns Block height maybe number
    */
   async getBlockHeight(): Promise<unknown> {
-    const info = await this.arweave.network.getInfo() as any;
+    const info = (await this.arweave.network.getInfo()) as any;
     return info.height;
   }
 
@@ -475,7 +479,10 @@ export class Common {
     switch (token) {
       case "AR": {
         const transaction = await this.arweave.createTransaction(
-          { target: target, quantity: this.arweave.ar.arToWinston(qty.toString()) },
+          {
+            target: target,
+            quantity: this.arweave.ar.arToWinston(qty.toString())
+          },
           this.wallet
         );
         await this.arweave.transactions.sign(transaction, this.wallet);
@@ -892,7 +899,9 @@ export class Common {
    */
   async gql(request: string): Promise<any> {
     const config = this.arweave.api.config;
-    const gqlUrl = `${config.protocol || "https"}://${config.host || "arweave.net"}/graphql`;
+    const gqlUrl = `${config.protocol || "https"}://${
+      config.host || "arweave.net"
+    }/graphql`;
     const { data } = await axios.post(gqlUrl, request, {
       headers: { "content-type": "application/json" }
     });
@@ -1249,6 +1258,38 @@ export class Common {
     delete privateKey.alg;
     delete privateKey.key_ops;
     return privateKey;
+  }
+
+  /**
+   * Generates a public and private key from Solana Mnemonic
+   * @param mnemonic - a 12 word mnemonic represented as a string
+   * @returns {object} - returns a Javascript object that contains address and privateKey
+   */
+
+  async generateSolanaKeyFromMnemonic(
+    mnemonic: string,
+    defaultDerivePath = `m/44'/501'/0'/0'`
+  ): Promise<{ address: string; privateKey: string }> {
+    let keyPair;
+
+    const bufferToString = (buffer: Buffer) =>
+      Buffer.from(buffer).toString("hex");
+
+    const deriveSeed = (seed: string) =>
+      derivePath(defaultDerivePath, seed).key;
+
+    const seed = mnemonicToSeedSync(mnemonic);
+    keyPair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
+
+    this.address = keyPair.publicKey.toString();
+    const privateKey = keyPair.secretKey.toString();
+
+    const wallet = {
+      address: this.address,
+      privateKey: privateKey
+    };
+    
+    return wallet;
   }
 }
 
