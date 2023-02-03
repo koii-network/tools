@@ -11,66 +11,63 @@ import {
 import { generateMnemonic, mnemonicToSeedSync } from "bip39";
 import bs58 from "bs58";
 import { derivePath } from "ed25519-hd-key";
-import { isEmpty } from "lodash";
+
+export interface Credentials {
+  key: string;
+  address: string;
+}
+
+export interface Wallet {
+  address: string;
+  privateKey: string;
+}
 
 export class K2Tool {
-  key: any;
-  address: any;
-  keypair: any;
-  provider: any;
-  connection: any;
+  key: string | null;
+  address: string | null;
+  keypair: Keypair | null;
+  provider: "mainnet-beta" | "devnet" | "testnet";
+  connection: Connection;
 
-  constructor(credentials: any, provider: any) {
+  constructor(
+    credentials: Credentials | undefined,
+    provider: "mainnet-beta" | "devnet" | "testnet" | undefined
+  ) {
     this.key = null;
     this.address = null;
     this.keypair = null;
 
-    if (!isEmpty(credentials)) {
+    if (credentials) {
       this.key = credentials.key;
       this.address = credentials.address;
       this.keypair = Keypair.fromSecretKey(
-        new Uint8Array(credentials.key.split(","))
+        new Uint8Array(credentials.key.split(",").map((value) => Number(value)))
       );
     }
 
+    if (!provider) provider = "testnet";
     this.provider = provider || "testnet";
     this.connection = new Connection(clusterApiUrl(provider), "confirmed");
   }
 
-  getCurrentNetwork() {
+  getCurrentNetwork(): "mainnet-beta" | "devnet" | "testnet" {
     return this.provider;
   }
 
-  importSeedphrase(seedphrase: any) {
-    /* Utilities */
-    const bufferToString = (buffer: any) => Buffer.from(buffer).toString("hex");
-    const deriveSeed = (seed: any) => derivePath(DERIVE_PATH, seed).key;
-
-    /* Import 100 wallets from seedphrase and DERIVE_PATH */
-    const keypairs = [];
-    for (let i = 0; i < 100; i++) {
-      const DERIVE_PATH = `m/44'/501'/${i}'/0'`;
-
-      const seed = mnemonicToSeedSync(seedphrase);
-      keypair = Keypair.fromSeed(deriveSeed(DERIVE_PATH, bufferToString(seed)));
-
-      keypairs.push(keypair);
-    }
-
-    return keypairs;
-  }
-
-  importWallet(key: any, type: any) {
+  importWallet(key: string, type: "seedphrase" | "key"): Wallet {
     let keypair;
 
+    /* Constants */
+    const DEFAULT_DERIVE_PATH = `m/44'/501'/0'`;
+
+    /* Helper functions */
+    const bufferToString = (buffer: Buffer) =>
+      Buffer.from(buffer).toString("hex");
+
+    const deriveSeed = (seed: string) =>
+      derivePath(DEFAULT_DERIVE_PATH, seed).key;
+
     if (type === "seedphrase") {
-      const DEFAULT_DERIVE_PATH = `m/44'/501'/0'`;
-
-      const bufferToString = (buffer: any) =>
-        Buffer.from(buffer).toString("hex");
-      const deriveSeed = (seed: any) =>
-        derivePath(DEFAULT_DERIVE_PATH, seed).key;
-
       const seed = mnemonicToSeedSync(key);
       keypair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
     } else {
@@ -90,37 +87,47 @@ export class K2Tool {
     return wallet;
   }
 
-  async generateWallet() {
+  generateWallet(): string {
     const seedPhrase = generateMnemonic();
-
-    await this.importWallet(seedPhrase, "seedphrase");
-
+    this.importWallet(seedPhrase, "seedphrase");
     return seedPhrase;
   }
 
-  async getBalance() {
-    const balance = await this.connection.getBalance(this.keypair.publicKey);
+  async getBalance(): Promise<number> {
+    if (!this.keypair) {
+      throw new Error("Cannot get the balance");
+    }
 
+    const balance = await this.connection.getBalance(this.keypair.publicKey);
     return balance;
   }
+  async transfer(
+    recipient: string,
+    amount: number
+  ): Promise<string | undefined> {
+    try {
+      if (!this.keypair) {
+        throw new Error("Keypair is currently null");
+      }
 
-  async transfer(recipient: any, amount: any) {
-    const transaction = new Transaction();
+      const transaction = new Transaction();
+      transaction.add(
+        SystemProgram.transfer({
+          fromPubkey: this.keypair.publicKey,
+          toPubkey: new PublicKey(recipient),
+          lamports: amount * LAMPORTS_PER_SOL
+        })
+      );
 
-    transaction.add(
-      SystemProgram.transfer({
-        fromPubkey: this.keypair.publicKey,
-        toPubkey: new PublicKey(recipient),
-        lamports: amount * LAMPORTS_PER_SOL
-      })
-    );
+      const receipt = await sendAndConfirmTransaction(
+        this.connection,
+        transaction,
+        [this.keypair]
+      );
 
-    const receipt = await sendAndConfirmTransaction(
-      this.connection,
-      transaction,
-      [this.keypair]
-    );
-
-    return receipt;
+      return receipt;
+    } catch (err) {
+      if (err instanceof Error) throw new Error(err.message);
+    }
   }
 }

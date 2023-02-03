@@ -7,12 +7,11 @@ import {
   SystemProgram,
   Transaction
 } from "@solana/web3.js";
-import isEmpty from "lodash/isEmpty";
 import { derivePath } from "ed25519-hd-key";
 import { generateMnemonic, mnemonicToSeedSync } from "bip39";
 import bs58 from "bs58";
 
-const endpoint = {
+export const endpoint = {
   http: {
     devnet: "http://api.devnet.solana.com",
     testnet: "http://api.testnet.solana.com",
@@ -30,14 +29,17 @@ const endpoint = {
 /**
  * Retrieves the RPC API URL for the specified cluster
  */
-export default function clusterApiUrl(cluster: any, tls?: any) {
+export function clusterApiUrl(
+  cluster: "mainnet-beta" | "devnet" | "testnet",
+  tls = true
+) {
   const key = tls === false ? "http" : "https";
 
   if (!cluster) {
     return endpoint[key]["devnet"];
   }
 
-  const url = endpoint[key][cluster];
+  const url: string = endpoint[key][cluster];
 
   if (!url) {
     throw new Error(`Unknown ${key} cluster: ${cluster}`);
@@ -46,51 +48,65 @@ export default function clusterApiUrl(cluster: any, tls?: any) {
   return url;
 }
 
-export class SolanaTool {
-  key: any;
-  address: any;
-  keypair: any;
-  provider: any;
-  connection: any;
+export interface Credentials {
+  key: string;
+  address: string;
+}
 
-  constructor(credentials: any, provider: any) {
+export interface Wallet {
+  address: string;
+  privateKey: string;
+}
+export class SolanaTool {
+  key: string | null;
+  address: string | null;
+  keypair: Keypair | null;
+  provider: "mainnet-beta" | "devnet" | "testnet";
+  connection: Connection;
+
+  constructor(
+    credentials: Credentials | undefined,
+    provider: "mainnet-beta" | "devnet" | "testnet" | undefined
+  ) {
     this.key = null;
     this.address = null;
     this.keypair = null;
 
-    if (!isEmpty(credentials)) {
+    if (credentials) {
       this.key = credentials.key;
       this.address = credentials.address;
       this.keypair = Keypair.fromSecretKey(
-        new Uint8Array(credentials.key.split(","))
+        new Uint8Array(credentials.key.split(",").map((value) => Number(value)))
       );
     }
-
+    if (!provider) provider = "testnet";
     this.provider = provider || "testnet";
     this.connection = new Connection(clusterApiUrl(provider), "confirmed");
   }
 
-  getCurrentNetwork() {
+  getCurrentNetwork(): "mainnet-beta" | "devnet" | "testnet" {
     return this.provider;
   }
 
-  async importWallet(key: any, type: any) {
+  async importWallet(key: string, type: "seedphrase" | "key"): Promise<Wallet> {
     let keypair;
     let seed;
 
-    const bufferToString = (buffer: any) => Buffer.from(buffer).toString("hex");
+    /* Constants */
     const DEFAULT_DERIVE_PATH = `m/44'/501'/0'/0'`; // from phantom
-
     const derivePathList = this.#getDerivePathList();
 
-    if (type === "seedphrase") {
-      const deriveSeed = (seed: any) =>
-        derivePath(DEFAULT_DERIVE_PATH, seed).key;
+    /* Helper functions */
+    const bufferToString = (buffer: Buffer) =>
+      Buffer.from(buffer).toString("hex");
 
+    const deriveSeed = (seed: string) =>
+      derivePath(DEFAULT_DERIVE_PATH, seed).key;
+
+    if (type === "seedphrase") {
       seed = mnemonicToSeedSync(key);
       keypair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
-
-      /* 
+      /*
         Pick first has balance address or first address
       */
       const connection = new Connection(
@@ -98,7 +114,6 @@ export class SolanaTool {
         "confirmed"
       );
       const balance = await connection.getBalance(keypair.publicKey);
-
       if (balance === 0) {
         for (const path of derivePathList) {
           try {
@@ -110,8 +125,8 @@ export class SolanaTool {
               keypair = _keypair;
               break;
             }
-          } catch (err: any) {
-            console.error("ERROR: ", err.message);
+          } catch (err) {
+            if (err instanceof Error) throw new Error(err.message);
           }
         }
       }
@@ -128,55 +143,61 @@ export class SolanaTool {
       address: this.address,
       privateKey: this.key
     };
-
     return wallet;
   }
 
-  #getDerivePathList() {
+  #getDerivePathList(): string[] {
     const derivePathList = [];
-
     for (let i = 0; i < 20; i++) {
       const solanaPath = `m/44'/501'/${i}'/0'`;
       const solflarePath = `m/44'/501'/${i}'`;
-
       derivePathList.push(solanaPath);
       derivePathList.push(solflarePath);
     }
-
     return derivePathList;
   }
 
-  async generateWallet() {
+  async generateWallet(): Promise<string> {
     const seedPhrase = generateMnemonic();
-
     await this.importWallet(seedPhrase, "seedphrase");
-
     return seedPhrase;
   }
 
-  async getBalance() {
+  async getBalance(): Promise<number> {
+    if (!this.keypair) {
+      throw new Error("Cannot get the balance");
+    }
     const balance = await this.connection.getBalance(this.keypair.publicKey);
-
     return balance;
   }
 
-  async transfer(recipient: any, amount: any) {
-    const transaction = new Transaction();
+  async transfer(
+    recipient: string,
+    amount: number
+  ): Promise<string | undefined> {
+    try {
+      if (!this.keypair) {
+        throw new Error("Keypair is currently null");
+      }
 
-    transaction.add(
-      SystemProgram.transfer({
-        fromPubkey: this.keypair.publicKey,
-        toPubkey: new PublicKey(recipient),
-        lamports: amount * LAMPORTS_PER_SOL
-      })
-    );
+      const transaction = new Transaction();
+      transaction.add(
+        SystemProgram.transfer({
+          fromPubkey: this.keypair.publicKey,
+          toPubkey: new PublicKey(recipient),
+          lamports: amount * LAMPORTS_PER_SOL
+        })
+      );
 
-    const receipt = await sendAndConfirmTransaction(
-      this.connection,
-      transaction,
-      [this.keypair]
-    );
+      const receipt = await sendAndConfirmTransaction(
+        this.connection,
+        transaction,
+        [this.keypair]
+      );
 
-    return receipt;
+      return receipt;
+    } catch (err) {
+      if (err instanceof Error) throw new Error(err.message);
+    }
   }
 }

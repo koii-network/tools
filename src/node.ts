@@ -97,15 +97,18 @@ export class Node extends Common {
    * Loads redis client
    */
   loadRedisClient(config?: redisConfig): void {
-    const host = (config && config.redis_ip) ?
-      config.redis_ip : process.env.REDIS_IP;
-    const port = (config && config.redis_port) ?
-      config.redis_port : parseInt(process.env.REDIS_PORT as string);
-    const password = (config && config.redis_password) ?
-      config.redis_password : process.env.REDIS_PASSWORD;
-    if (!host || !port)
-      throw Error("CANNOT READ REDIS IP OR PORT FROM ENV");
-    
+    const host =
+      config && config.redis_ip ? config.redis_ip : process.env.REDIS_IP;
+    const port =
+      config && config.redis_port
+        ? config.redis_port
+        : parseInt(process.env.REDIS_PORT as string);
+    const password =
+      config && config.redis_password
+        ? config.redis_password
+        : process.env.REDIS_PASSWORD;
+    if (!host || !port) throw Error("CANNOT READ REDIS IP OR PORT FROM ENV");
+
     this.redisClient = redis.createClient({ port, host, password });
     this.redisClient.on("error", function (error) {
       console.error("redisClient " + error);
@@ -132,11 +135,11 @@ export class Node extends Common {
    * @param pattern Redis key of data
    * @returns
    */
-   redisKeysAsync(pattern: string): Promise<Array<string>| null> {
+  redisKeysAsync(pattern: string): Promise<Array<string> | null> {
     return new Promise((resolve, reject) => {
       if (this.redisClient === undefined) reject("Redis not connected");
       else
-        this.redisClient.keys(pattern, (err,res) => {
+        this.redisClient.keys(pattern, (err, res) => {
           err ? reject(err) : resolve(res);
         });
     });
@@ -147,11 +150,11 @@ export class Node extends Common {
    * @param key key to delete
    * @returns
    */
-   redisDelAsync(key: string): Promise<Number|null> {
+  redisDelAsync(key: string): Promise<number | null> {
     return new Promise((resolve, reject) => {
       if (this.redisClient === undefined) reject("Redis not connected");
       else
-        this.redisClient.del(key, (err,res) => {
+        this.redisClient.del(key, (err, res) => {
           err ? reject(err) : resolve(res);
         });
     });

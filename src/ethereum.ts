@@ -2,101 +2,182 @@ import { ethers } from "ethers";
 import { generateMnemonic, mnemonicToSeedSync } from "bip39";
 import hdkey from "ethereumjs-wallet/dist/hdkey";
 
-const clarifyEthereumProvider = (ethProvider: string) => {
+export interface ProviderInformation {
+  ethNetwork: string;
+  apiKey: string;
+}
+
+export function clarifyEthereumProvider(
+  ethProvider: string
+): ProviderInformation | undefined {
   try {
     const providerArray = ethProvider.split("/");
     const apiKey = providerArray[4];
     const ethNetwork = providerArray[2].split(".")[0];
     return { ethNetwork, apiKey };
-  } catch (err: any) {
-    console.error("Failed to clarify Ethereum Provider - error: ", err.message);
-    return {
-      ethNetwork: "mainnet",
-      apiKey: "f811f2257c4a4cceba5ab9044a1f03d2"
-    };
+  } catch (err) {
+    console.error("Failed to clarify Ethereum Provider - error: ", err);
   }
-};
+}
 
 export class EthereumTool {
   provider: string;
-  web3: any;
-  key: any;
-  address: any;
+  web3: ethers.providers.InfuraProvider;
+  key: string | null;
+  address: string | null;
 
   constructor(provider: string) {
     this.provider = provider;
+    const providerInformation = clarifyEthereumProvider(this.provider);
 
-    const { ethNetwork, apiKey } = clarifyEthereumProvider(this.provider);
-    const network = ethers.providers.getNetwork(ethNetwork);
-    this.web3 = new ethers.providers.InfuraProvider(network, apiKey);
+    if (!providerInformation) {
+      throw new Error("Invalid ethereum provider");
+    }
+
+    const network = ethers.providers.getNetwork(providerInformation.ethNetwork);
+    this.web3 = new ethers.providers.InfuraProvider(
+      network,
+      providerInformation.apiKey
+    );
 
     this.key = null;
     this.address = null;
   }
 
-  getWeb3() {
+  getWeb3(): ethers.providers.InfuraProvider {
     return this.web3;
   }
 
-  getCurrentNetWork() {
+  getCurrentNetWork(): string {
     return this.provider;
   }
 
-  createNewWallet() {
+  createNewWallet(): string {
     const seedPhrase = this.#generateMnemonic();
-
     const createdWallet = this.#getWalletFromSeedPhrase(seedPhrase);
     this.key = createdWallet.privateKey;
     this.address = createdWallet.address;
     return seedPhrase;
   }
 
-  importWallet(payload: any, type: any) {
+  importWallet(payload: string, type: "key" | "seedphrase"): ethers.Wallet {
     let wallet;
     if (type === "key") {
-      // wallet = this.#web3.eth.accounts.privateKeyToAccount(payload)
       wallet = new ethers.Wallet(payload, this.web3);
     } else {
       wallet = this.#getWalletFromSeedPhrase(payload);
     }
     this.key = wallet.privateKey;
     this.address = wallet.address;
-
     return wallet;
   }
 
-  async getBalance() {
+  async getBalance(): Promise<ethers.BigNumber> {
+    if (!this.address) {
+      throw new Error("Cannot get the balance");
+    }
     return this.web3.getBalance(this.address);
   }
 
-  async transferEth(toAddress: string, amount: number) {
-    // TODO MinhVu
+  async transfer(
+    recipient: string,
+    qty: string,
+    maxPriorityFeePerGas?: string,
+    maxFeePerGas?: string
+  ) {
+    try {
+      if (!this.key || !this.address)
+        throw new Error("Key and address should not be null");
+
+      // Initialize wallet from privateKey
+      const wallet = new ethers.Wallet(this.key, this.web3);
+      const signer = wallet.connect(this.web3);
+
+      // Calculate gas
+      if (!maxPriorityFeePerGas) maxPriorityFeePerGas = "2.5";
+      const maxPriorityFeePerGasPayload = ethers.utils.parseUnits(
+        maxPriorityFeePerGas,
+        "gwei"
+      );
+
+      let maxFeePerGasPayload: ethers.BigNumber;
+      if (!maxFeePerGas) {
+        const result = await this.#calculateMaxFeePerGas(
+          maxPriorityFeePerGasPayload
+        );
+
+        if (!result) throw new Error("Cannot calculate max fee per gas");
+
+        maxFeePerGasPayload = result;
+      } else {
+        maxFeePerGasPayload = ethers.utils.parseUnits(maxFeePerGas, "gwei");
+      }
+
+      // Payload fields
+      const nonce = await this.web3.getTransactionCount(
+        this.address,
+        "pending"
+      );
+      const chainId = (await this.web3.getNetwork()).chainId;
+      const type = 2;
+
+      const transactionPayload: ethers.providers.TransactionRequest = {
+        to: recipient,
+        value: ethers.utils.parseEther(qty),
+        maxPriorityFeePerGas: maxPriorityFeePerGasPayload,
+        maxFeePerGas: maxFeePerGasPayload,
+        nonce,
+        chainId,
+        type
+      };
+
+      const gasLimit = await signer.estimateGas(transactionPayload);
+      transactionPayload.gasLimit = gasLimit || ethers.BigNumber.from("21000");
+
+      // Sign transaction
+      const rawTransaction = await signer.signTransaction(transactionPayload);
+      const signedTransaction = ethers.utils.parseTransaction(rawTransaction);
+      const txHash = signedTransaction?.hash;
+      await this.web3.sendTransaction(rawTransaction);
+
+      return txHash;
+    } catch (err) {
+      throw new Error(`Failed to transfer ETH: ${err}`);
+    }
   }
 
-  async getTransactionStatus(txHash: string) {
-    // return this.#web3.eth.getTransactionReceipt(txHash)
+  async getTransactionStatus(
+    txHash: string
+  ): Promise<ethers.providers.TransactionReceipt> {
     return this.web3.getTransactionReceipt(txHash);
   }
 
-  /*
-    PRIVATE FUNCTIONS
-  */
+  /* PRIVATE FUNCTIONS */
   #getWalletFromSeedPhrase(seedPhrase: string) {
     const seed = mnemonicToSeedSync(seedPhrase);
     const hdwallet = hdkey.fromMasterSeed(seed);
     const wallet_hdpath = "m/44'/60'/0'/0/0";
-
     const wallet = hdwallet.derivePath(wallet_hdpath).getWallet();
-    const address = "0x" + wallet.getAddress().toString("hex");
-
     const privateKey = wallet.getPrivateKey().toString("hex");
-    // const restoredWallet = this.#web3.eth.accounts.privateKeyToAccount(privateKey)
     const restoredWallet = new ethers.Wallet(privateKey, this.web3);
-
     return restoredWallet;
   }
 
-  #generateMnemonic() {
+  #generateMnemonic(): string {
     return generateMnemonic();
+  }
+
+  async #calculateMaxFeePerGas(
+    maxPriorityFeePerGasPayload: ethers.BigNumber
+  ): Promise<ethers.BigNumber | undefined> {
+    try {
+      const baseFeePerGas = (await this.web3.getBlock("latest")).baseFeePerGas;
+
+      if (!baseFeePerGas) throw new Error("Cannot get base fee per gas");
+
+      return baseFeePerGas.mul(2).add(maxPriorityFeePerGasPayload);
+    } catch (error) {
+      throw new Error("Cannot calculate max fee per gas");
+    }
   }
 }

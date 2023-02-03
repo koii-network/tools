@@ -436,7 +436,8 @@ export class Common {
     } else {
       try {
         const resp: any = await axios.get(
-          `https://api${network == "RINKEBY" ? "-rinkeby" : ""
+          `https://api${
+            network == "RINKEBY" ? "-rinkeby" : ""
           }.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&page=1&offset=${offset}&sort=asc&apikey=${APIKey}`
         );
         return (resp.data && resp.data.result) || [];
