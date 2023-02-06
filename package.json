@@ -27,7 +27,7 @@
     "@_koi/web3.js": "^0.0.6",
     "@solana/web3.js": "^1.73.2",
     "@vespaiach/axios-fetch-adapter": "^0.3.1",
-    "arweave": "^1.10.18",
+    "arweave": "^1.12.4",
     "axios": "^0.23.0",
     "bip39": "^3.0.4",
     "bs58": "^5.0.0",
@@ -40,6 +40,7 @@
     "node-polyfill-webpack-plugin": "^1.1.4",
     "pem-jwk": "^2.0.0",
     "redis": "^3.1.2",
+    "smartweave": "^0.4.49",
     "web3": "^1.6.0"
   },
   "devDependencies": {

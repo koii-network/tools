@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import axiosAdapter from "@vespaiach/axios-fetch-adapter";
-import Arweave from "arweave/node";
+import Arweave from "arweave";
 import smartweave from "smartweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import * as arweaveUtils from "arweave/node/lib/utils";
