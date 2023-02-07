@@ -1,6 +1,10 @@
 import { ethers } from "ethers";
 import { generateMnemonic, mnemonicToSeedSync } from "bip39";
 import hdkey from "ethereumjs-wallet/dist/hdkey";
+import {
+  ETHEREUM_DEFAULT_DERIVATION_PATH as wallet_hdpath,
+  ImportMethod
+} from "./constants";
 
 export interface ProviderInformation {
   ethNetwork: string;
@@ -16,13 +20,13 @@ export function clarifyEthereumProvider(
     const ethNetwork = providerArray[2].split(".")[0];
     return { ethNetwork, apiKey };
   } catch (err) {
-    console.error("Failed to clarify Ethereum Provider - error: ", err);
+    throw new Error("Failed to clarify Ethereum Provider");
   }
 }
 
 export class EthereumTool {
   provider: string;
-  web3: ethers.providers.InfuraProvider;
+  web3: ethers.providers.UrlJsonRpcProvider;
   key: string | null;
   address: string | null;
 
@@ -44,7 +48,7 @@ export class EthereumTool {
     this.address = null;
   }
 
-  getWeb3(): ethers.providers.InfuraProvider {
+  getWeb3(): ethers.providers.UrlJsonRpcProvider {
     return this.web3;
   }
 
@@ -60,7 +64,7 @@ export class EthereumTool {
     return seedPhrase;
   }
 
-  importWallet(payload: string, type: "key" | "seedphrase"): ethers.Wallet {
+  importWallet(payload: string, type: ImportMethod): ethers.Wallet {
     let wallet;
     if (type === "key") {
       wallet = new ethers.Wallet(payload, this.web3);
@@ -119,6 +123,9 @@ export class EthereumTool {
         "pending"
       );
       const chainId = (await this.web3.getNetwork()).chainId;
+      /* type=0: Legacy transaction
+         type=2: EIP1559 transaction
+      */
       const type = 2;
 
       const transactionPayload: ethers.providers.TransactionRequest = {
@@ -156,7 +163,6 @@ export class EthereumTool {
   #getWalletFromSeedPhrase(seedPhrase: string) {
     const seed = mnemonicToSeedSync(seedPhrase);
     const hdwallet = hdkey.fromMasterSeed(seed);
-    const wallet_hdpath = "m/44'/60'/0'/0/0";
     const wallet = hdwallet.derivePath(wallet_hdpath).getWallet();
     const privateKey = wallet.getPrivateKey().toString("hex");
     const restoredWallet = new ethers.Wallet(privateKey, this.web3);

@@ -11,6 +11,11 @@ import {
 import { generateMnemonic, mnemonicToSeedSync } from "bip39";
 import bs58 from "bs58";
 import { derivePath } from "ed25519-hd-key";
+import {
+  K2Provider,
+  K2_DEFAULT_DERIVATION_PATH as DEFAULT_DERIVE_PATH,
+  ImportMethod
+} from "./constants";
 
 export interface Credentials {
   key: string;
@@ -26,12 +31,12 @@ export class K2Tool {
   key: string | null;
   address: string | null;
   keypair: Keypair | null;
-  provider: "mainnet-beta" | "devnet" | "testnet";
+  provider: K2Provider;
   connection: Connection;
 
   constructor(
     credentials: Credentials | undefined,
-    provider: "mainnet-beta" | "devnet" | "testnet" | undefined
+    provider: K2Provider | undefined
   ) {
     this.key = null;
     this.address = null;
@@ -50,15 +55,12 @@ export class K2Tool {
     this.connection = new Connection(clusterApiUrl(provider), "confirmed");
   }
 
-  getCurrentNetwork(): "mainnet-beta" | "devnet" | "testnet" {
+  getCurrentNetwork(): K2Provider {
     return this.provider;
   }
 
-  importWallet(key: string, type: "seedphrase" | "key"): Wallet {
+  importWallet(key: string, type: ImportMethod): Wallet {
     let keypair;
-
-    /* Constants */
-    const DEFAULT_DERIVE_PATH = `m/44'/501'/0'`;
 
     /* Helper functions */
     const bufferToString = (buffer: Buffer) =>
