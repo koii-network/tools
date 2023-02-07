@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import axiosAdapter from "@vespaiach/axios-fetch-adapter";
-import Arweave from "arweave/node";
+import Arweave from "arweave";
 import smartweave from "smartweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import * as arweaveUtils from "arweave/node/lib/utils";
@@ -436,7 +436,8 @@ export class Common {
     } else {
       try {
         const resp: any = await axios.get(
-          `https://api${network == "RINKEBY" ? "-rinkeby" : ""
+          `https://api${
+            network == "RINKEBY" ? "-rinkeby" : ""
           }.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&page=1&offset=${offset}&sort=asc&apikey=${APIKey}`
         );
         return (resp.data && resp.data.result) || [];
