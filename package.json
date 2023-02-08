@@ -41,7 +41,7 @@
     "pem-jwk": "^2.0.0",
     "redis": "^3.1.2",
     "smartweave": "^0.4.49",
-    "web3": "^1.6.0"
+    "web3": "^1.8.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.12",
