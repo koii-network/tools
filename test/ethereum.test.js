@@ -28,8 +28,8 @@ describe("EthereumTool class", () => {
   beforeAll(() => {
     jest.spyOn(bip39, "generateMnemonic").mockReturnValue(SECRET_PHRASES);
 
-    ethers.providers.InfuraProvider.prototype.getBalance = mockedGetBalance;
-    ethers.providers.InfuraProvider.prototype.getTransactionReceipt =
+    ethers.providers.JsonRpcProvider.prototype.getBalance = mockedGetBalance;
+    ethers.providers.JsonRpcProvider.prototype.getTransactionReceipt =
       mockedGetTransactionReceipt;
   });
 

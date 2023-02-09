@@ -10,29 +10,25 @@ import {
 import { derivePath } from "ed25519-hd-key";
 import { generateMnemonic, mnemonicToSeedSync } from "bip39";
 import bs58 from "bs58";
+import { ImportMethod, SOLProvider } from "./constants";
 
 export const endpoint = {
   http: {
     devnet: "http://api.devnet.solana.com",
     testnet: "http://api.testnet.solana.com",
-    "mainnet-beta":
-      "http://solana-mainnet.g.alchemy.com/v2/Ofyia5hQc-c-yfWwI4C9Qa0UcJ5lewDy"
+    "mainnet-beta": `http://solana-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`
   },
   https: {
     devnet: "https://api.devnet.solana.com",
     testnet: "https://api.testnet.solana.com",
-    "mainnet-beta":
-      "https://solana-mainnet.g.alchemy.com/v2/Ofyia5hQc-c-yfWwI4C9Qa0UcJ5lewDy"
+    "mainnet-beta": `https://solana-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`
   }
 };
 
 /**
  * Retrieves the RPC API URL for the specified cluster
  */
-export function clusterApiUrl(
-  cluster: "mainnet-beta" | "devnet" | "testnet",
-  tls = true
-) {
+export function clusterApiUrl(cluster: SOLProvider, tls = true) {
   const key = tls === false ? "http" : "https";
 
   if (!cluster) {
@@ -61,12 +57,12 @@ export class SolanaTool {
   key: string | null;
   address: string | null;
   keypair: Keypair | null;
-  provider: "mainnet-beta" | "devnet" | "testnet";
+  provider: SOLProvider;
   connection: Connection;
 
   constructor(
     credentials: Credentials | undefined,
-    provider: "mainnet-beta" | "devnet" | "testnet" | undefined
+    provider: SOLProvider | undefined
   ) {
     this.key = null;
     this.address = null;
@@ -84,11 +80,11 @@ export class SolanaTool {
     this.connection = new Connection(clusterApiUrl(provider), "confirmed");
   }
 
-  getCurrentNetwork(): "mainnet-beta" | "devnet" | "testnet" {
+  getCurrentNetwork(): SOLProvider {
     return this.provider;
   }
 
-  async importWallet(key: string, type: "seedphrase" | "key"): Promise<Wallet> {
+  async importWallet(key: string, type: ImportMethod): Promise<Wallet> {
     let keypair;
     let seed;
 

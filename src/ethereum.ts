@@ -6,49 +6,22 @@ import {
   ImportMethod
 } from "./constants";
 
-export interface ProviderInformation {
-  ethNetwork: string;
-  apiKey: string;
-}
-
-export function clarifyEthereumProvider(
-  ethProvider: string
-): ProviderInformation | undefined {
-  try {
-    const providerArray = ethProvider.split("/");
-    const apiKey = providerArray[4];
-    const ethNetwork = providerArray[2].split(".")[0];
-    return { ethNetwork, apiKey };
-  } catch (err) {
-    throw new Error("Failed to clarify Ethereum Provider");
-  }
-}
-
 export class EthereumTool {
   provider: string;
-  web3: ethers.providers.UrlJsonRpcProvider;
+  web3: ethers.providers.JsonRpcProvider;
   key: string | null;
   address: string | null;
 
   constructor(provider: string) {
     this.provider = provider;
-    const providerInformation = clarifyEthereumProvider(this.provider);
 
-    if (!providerInformation) {
-      throw new Error("Invalid ethereum provider");
-    }
-
-    const network = ethers.providers.getNetwork(providerInformation.ethNetwork);
-    this.web3 = new ethers.providers.InfuraProvider(
-      network,
-      providerInformation.apiKey
-    );
+    this.web3 = new ethers.providers.JsonRpcProvider(provider);
 
     this.key = null;
     this.address = null;
   }
 
-  getWeb3(): ethers.providers.UrlJsonRpcProvider {
+  getWeb3(): ethers.providers.JsonRpcProvider {
     return this.web3;
   }
 
