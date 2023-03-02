@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from "axios";
+import axiosAdapter from "@vespaiach/axios-fetch-adapter";
 import Arweave from "arweave";
 import smartweave from "smartweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
@@ -90,7 +91,9 @@ export class Common {
    * @returns Current KOI system state
    */
   async getKoiiState(): Promise<any> {
-    const response = await axios.get(this.bundlerUrl + "/state");
+    const response = await axios.get(this.bundlerUrl + "/state", {
+      adapter: axiosAdapter
+    });
     if (response.data) return response.data;
   }
 
@@ -109,7 +112,11 @@ export class Common {
    * @returns The contract state object
    */
   async getState(txId: string): Promise<any> {
-    return (await axios.get(this.bundlerUrl + `/${txId}`)).data;
+    return (
+      await axios.get(this.bundlerUrl + `/${txId}`, {
+        adapter: axiosAdapter
+      })
+    ).data;
   }
 
   /**
@@ -120,7 +127,11 @@ export class Common {
    * @returns State of an NFT including views and reward
    */
   async getNftState(id: string): Promise<any> {
-    return (await axios.get(this.bundlerUrl + `/attention/nft?id=${id}`)).data;
+    return (
+      await axios.get(this.bundlerUrl + `/attention/nft?id=${id}`, {
+        adapter: axiosAdapter
+      })
+    ).data;
   }
 
   /**
@@ -155,7 +166,11 @@ export class Common {
    * @returns Attention contract ID running on the bundler as a string
    */
   async getAttentionId(): Promise<string> {
-    return (await axios.get(this.bundlerUrl + "/attention/id")).data as string;
+    return (
+      await axios.get(this.bundlerUrl + "/attention/id", {
+        adapter: axiosAdapter
+      })
+    ).data as string;
   }
 
   /**
@@ -802,7 +817,8 @@ export class Common {
    */
   async gql(request: string): Promise<any> {
     const { data } = await axios.post(URL_ARWEAVE_GQL, request, {
-      headers: { "content-type": "application/json" }
+      headers: { "content-type": "application/json" },
+      adapter: axiosAdapter
     });
     return data;
   }
@@ -815,7 +831,7 @@ export class Common {
   async getNodes(
     url: string = this.bundlerUrl
   ): Promise<Array<BundlerPayload>> {
-    const res = await axios.get(url + BUNDLER_NODES);
+    const res = await axios.get(url + BUNDLER_NODES, { adapter: axiosAdapter });
     try {
       return JSON.parse(res.data as string);
     } catch (_e) {
@@ -1165,7 +1181,9 @@ export class Common {
  * @returns Axios response with info
  */
 function getArweaveNetInfo(): Promise<AxiosResponse<any>> {
-  return axios.get(URL_ARWEAVE_INFO);
+  return axios.get(URL_ARWEAVE_INFO, {
+    adapter: axiosAdapter
+  });
 }
 
 module.exports = {

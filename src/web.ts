@@ -6,11 +6,12 @@ export class Web extends Common {
    * @param address Address to check balance
    * @returns Balance
    */
-  async getKoii(address: string): Promise<Number> {
+  async getKoii(address: string): Promise<number> {
     this.assertArId(address);
     const state = await this.getKoiiState();
-    return Object.prototype.hasOwnProperty.call(state.balances, address) ?
-      state.balances[address] : 0;
+    return Object.prototype.hasOwnProperty.call(state.balances, address)
+      ? state.balances[address]
+      : 0;
   }
 
   /**
@@ -18,7 +19,7 @@ export class Web extends Common {
    * @param address Address to check balance
    * @returns Balance
    */
-  async getAr(address: string): Promise<Number> {
+  async getAr(address: string): Promise<number> {
     this.assertArId(address);
     const winston = await arweave.wallets.getBalance(address);
     const ar = arweave.ar.winstonToAr(winston);
