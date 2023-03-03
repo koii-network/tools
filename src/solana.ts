@@ -65,8 +65,8 @@ export class SolanaTool {
   connection: Connection;
 
   constructor(
-    credentials: Credentials | undefined,
-    provider: "mainnet-beta" | "devnet" | "testnet" | undefined
+    credentials?: Credentials,
+    provider?: "mainnet-beta" | "devnet" | "testnet"
   ) {
     this.key = null;
     this.address = null;

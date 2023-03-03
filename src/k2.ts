@@ -34,10 +34,7 @@ export class K2Tool {
   provider: K2Provider;
   connection: Connection;
 
-  constructor(
-    credentials: Credentials | undefined,
-    provider: K2Provider | undefined
-  ) {
+  constructor(credentials?: Credentials, provider?: K2Provider) {
     this.key = null;
     this.address = null;
     this.keypair = null;

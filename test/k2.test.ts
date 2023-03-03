@@ -1,9 +1,16 @@
 "use strict";
 
 /* EXTERNAL MODULES */
-const bip39 = require("bip39");
-const base58 = require("bs58");
-const koiWeb3 = require("@_koi/web3.js");
+import * as bip39 from "bip39";
+
+import * as base58 from "bs58";
+
+import * as koiWeb3 from "@_koi/web3.js";
+
+/* INTERNAL MODULES */
+import * as k2 from "../src/k2";
+// const k2 = require("../dist/k2");
+
 const {
   Connection,
   Keypair,
@@ -13,16 +20,12 @@ const {
   Transaction
 } = koiWeb3;
 
-/* INTERNAL MODULES */
-const k2 = require("../src/k2");
-// const k2 = require("../dist/k2");
-
 /* CONSTANTS */
-const K2_NETWORK_PROVIDER = {
-  MAINNET: "mainnet-beta",
-  TESTNET: "testnet",
-  DEVNET: "devnet"
-};
+enum K2_NETWORK_PROVIDER {
+  MAINNET = "mainnet-beta",
+  TESTNET = "testnet",
+  DEVNET = "devnet"
+}
 
 const SECRET_PHRASES =
   "rent involve devote swap uniform zero improve firm domain ketchup giggle universe";
@@ -49,7 +52,7 @@ const WALLET_CREDENTIALS = {
 };
 
 /* HELPER FUNCTIONS */
-const fromStringKeyToBase58Key = (key) => {
+const fromStringKeyToBase58Key = (key: string) => {
   return base58.encode(
     new Uint8Array(key.split(",").map((value) => Number(value)))
   );
@@ -63,7 +66,7 @@ describe("K2Tool class", () => {
 
   describe("getCurrentNetwork function", () => {
     it("should return correct testnet provider", () => {
-      const k2Tool = new k2.K2Tool(null, K2_NETWORK_PROVIDER.TESTNET);
+      const k2Tool = new k2.K2Tool(undefined, K2_NETWORK_PROVIDER.TESTNET);
       const provider = k2Tool.getCurrentNetwork();
 
       expect(provider).toBe(K2_NETWORK_PROVIDER.TESTNET);
@@ -73,7 +76,7 @@ describe("K2Tool class", () => {
   describe("importWallet function", () => {
     describe("importWallet with private key", () => {
       it("should correctly return the wallet when import with main private key", () => {
-        const k2Tool = new k2.K2Tool(null);
+        const k2Tool = new k2.K2Tool();
         const key = fromStringKeyToBase58Key(WALLET_KEY.MAIN);
         const wallet = k2Tool.importWallet(key, "key");
 
@@ -85,7 +88,7 @@ describe("K2Tool class", () => {
       });
 
       it("should correctly return the wallet when import with sub private key", () => {
-        const k2Tool = new k2.K2Tool(null);
+        const k2Tool = new k2.K2Tool(undefined);
         const key = fromStringKeyToBase58Key(WALLET_KEY.SUB);
         const wallet = k2Tool.importWallet(key, "key");
 
@@ -99,7 +102,7 @@ describe("K2Tool class", () => {
 
     describe("importWallet with secret phrase", () => {
       it("should import the first wallet", () => {
-        const k2Tool = new k2.K2Tool(null);
+        const k2Tool = new k2.K2Tool(undefined);
         const wallet = k2Tool.importWallet(SECRET_PHRASES, "seedphrase");
 
         expect(k2Tool.address).toBe(WALLET_ADDRESS.MAIN);
@@ -154,7 +157,7 @@ describe("K2Tool class", () => {
       const balance = await k2Tool.getBalance();
 
       expect(mockedGetBalance).toBeCalledTimes(1);
-      expect(mockedGetBalance).toBeCalledWith(new PublicKey(k2Tool.address));
+      expect(mockedGetBalance).toBeCalledWith(new PublicKey(k2Tool.address!));
     });
   });
 
@@ -163,6 +166,7 @@ describe("K2Tool class", () => {
 
     beforeAll(() => {
       jest.spyOn(koiWeb3, "sendAndConfirmTransaction");
+      // @ts-ignore
       koiWeb3.sendAndConfirmTransaction = mockedSendAndConfirmTransaction;
     });
 

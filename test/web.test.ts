@@ -1,6 +1,6 @@
 "use strict";
 
-const kcommon = require("../dist/web");
+import * as kcommon from "../src/web";
 const ktools = new kcommon.Web();
 
 test("My content", async () => {
