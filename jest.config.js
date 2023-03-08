@@ -2,14 +2,11 @@ module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
   "testMatch": ["<rootDir>/**/*.(spec|test).(ts|tsx)"],
-  setupFiles: ["dotenv/config"],
   transform: {
-    "\\.(ts|tsx|js|jsx)$": "ts-jest",
-    // [`^($axios).+\\.js$`]: 'babel-jest',
+    "\\.(ts|tsx)$": "ts-jest",
   },
-  // transformIgnorePatterns: ["node_modules/(?!axios)"],
   moduleNameMapper: {
-    '^axios$': require.resolve('axios'),
+    "axios": "<rootDir>/node_modules/axios/dist/axios.js"
   },
   transformIgnorePatterns: ["node_modules/(?!axios)/"]
 };
