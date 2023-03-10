@@ -3,7 +3,7 @@ dotenv.config();
 
 import { Common, arweave } from "./common";
 import { readFile } from "fs/promises";
-import redis, { RedisClient } from "redis";
+import redis, { RedisClientType } from "redis";
 //@ts-ignore
 import kohaku from "@_koi/kohaku";
 
@@ -19,7 +19,7 @@ interface redisConfig {
 export class Node extends Common {
   totalVoted = -1;
   receipts: Array<unknown> = [];
-  redisClient?: RedisClient;
+  redisClient?: RedisClientType;
 
   /**
    * Retrieves the current state in kohaku cache and triggers an update for the next request
@@ -109,8 +109,11 @@ export class Node extends Common {
         : process.env.REDIS_PASSWORD;
     if (!host || !port) throw Error("CANNOT READ REDIS IP OR PORT FROM ENV");
 
-    this.redisClient = redis.createClient({ port, host, password });
-    this.redisClient.on("error", function (error) {
+    this.redisClient = redis.createClient({
+      password,
+      socket: { port, host }
+    });
+    this.redisClient.on("error", function (error: string) {
       console.error("redisClient " + error);
     });
   }
@@ -125,9 +128,10 @@ export class Node extends Common {
     return new Promise((resolve, reject) => {
       if (this.redisClient === undefined) reject("Redis not connected");
       else
-        this.redisClient.set(key, value, (err) => {
-          err ? reject(err) : resolve();
-        });
+        this.redisClient
+          .set(key, value)
+          .then(() => resolve())
+          .catch(reject);
     });
   }
   /**
@@ -138,10 +142,7 @@ export class Node extends Common {
   redisKeysAsync(pattern: string): Promise<Array<string> | null> {
     return new Promise((resolve, reject) => {
       if (this.redisClient === undefined) reject("Redis not connected");
-      else
-        this.redisClient.keys(pattern, (err, res) => {
-          err ? reject(err) : resolve(res);
-        });
+      else this.redisClient.keys(pattern).then(resolve).catch(reject);
     });
   }
 
@@ -153,10 +154,7 @@ export class Node extends Common {
   redisDelAsync(key: string): Promise<number | null> {
     return new Promise((resolve, reject) => {
       if (this.redisClient === undefined) reject("Redis not connected");
-      else
-        this.redisClient.del(key, (err, res) => {
-          err ? reject(err) : resolve(res);
-        });
+      else this.redisClient.del(key).then(resolve).catch(reject);
     });
   }
 
@@ -168,10 +166,7 @@ export class Node extends Common {
   redisGetAsync(key: string): Promise<string | null> {
     return new Promise((resolve, reject) => {
       if (this.redisClient === undefined) reject("Redis not connected");
-      else
-        this.redisClient.get(key, (err, res) => {
-          err ? reject(err) : resolve(res);
-        });
+      else this.redisClient.get(key).then(resolve).catch(reject);
     });
   }
 }
