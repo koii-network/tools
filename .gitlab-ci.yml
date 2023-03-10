@@ -1,18 +1,51 @@
-workflow:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: never
-    - if: '$CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "main"'
-      when: always
-
 image: node:latest
+
 stages:
+  - prerequisites
+  - checks
   - deploy
+
+install:
+  stage: prerequisites
+  script:
+    - yarn install --cache-folder .yarn
+
+  artifacts:
+    name: 'artifacts'
+    untracked: true
+    expire_in: 30 mins
+    paths:
+      - .yarn/
+      - node_modules/
+
+test:
+  stage: checks
+  needs: ['install']
+
+  script:
+    - yarn run test
+  dependencies:
+    - install
+
+build:
+  stage: checks
+  needs: ['install']
+
+  script:
+    - yarn build
+  artifacts:
+    name: 'artifacts'
+    untracked: true
+    expire_in: 30 mins
+    paths:
+      - *
+  dependencies:
+    - install
 
 deploy:
   stage: deploy
+  only:
+    - main
   script:
-    - npm install
-    - npm run build
     - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
     - npm publish -f --access public

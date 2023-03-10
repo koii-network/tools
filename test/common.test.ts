@@ -4,6 +4,7 @@ describe("Common class", () => {
   let ktools: Common;
 
   beforeAll(() => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const fetch = require("node-fetch");
     global.fetch = fetch;
     global.Headers = fetch.Headers;
