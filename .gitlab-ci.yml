@@ -27,6 +27,15 @@ test:
   dependencies:
     - install
 
+lint:
+  stage: checks
+  needs: ['install']
+
+  script:
+    - yarn run lint
+  dependencies:
+    - install
+
 build:
   stage: checks
   needs: ['install']
