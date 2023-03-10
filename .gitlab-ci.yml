@@ -38,7 +38,7 @@ build:
     untracked: true
     expire_in: 30 mins
     paths:
-      - *
+      - **
   dependencies:
     - install
 
