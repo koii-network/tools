@@ -6,3 +6,4 @@ dist
 my-db.db
 .vscode
 coverage
+.idea

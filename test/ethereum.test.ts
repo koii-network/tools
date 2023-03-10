@@ -1,11 +1,9 @@
-"use strict";
-
 /* EXTERNAL MODULES */
-const bip39 = require("bip39");
-const ethers = require("ethers");
+import * as bip39 from "bip39";
 
+import * as ethers from "ethers";
 /* INTERNAL MODULES  */
-const ethereum = require("../src/ethereum");
+import * as ethereum from "../src/ethereum";
 // const ethereum = require("../dist/ethereum");
 
 /* CONSTANTS */

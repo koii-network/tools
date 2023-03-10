@@ -1,9 +1,12 @@
 "use strict";
 
 /* EXTERNAL MODULES */
-const bip39 = require("bip39");
-const base58 = require("bs58");
-const solanaWeb3 = require("@solana/web3.js");
+import * as bip39 from "bip39";
+
+import * as base58 from "bs58";
+
+import * as solanaWeb3 from "@solana/web3.js";
+
 const {
   Connection,
   Keypair,
@@ -14,15 +17,15 @@ const {
 } = solanaWeb3;
 
 /* INTERNAL MODULES */
-const solana = require("../src/solana");
+import * as solana from "../src/solana";
 // const solana = require("../dist/solana");
 
 /* CONSTANTS */
-const SOL_NETWORK_PROVIDER = {
-  MAINNET: "mainnet-beta",
-  TESTNET: "testnet",
-  DEVNET: "devnet"
-};
+enum SOL_NETWORK_PROVIDER {
+  MAINNET = "mainnet-beta",
+  TESTNET = "testnet",
+  DEVNET = "devnet"
+}
 
 const SECRET_PHRASES =
   "neglect trigger better derive lawsuit erosion cry online private rib vehicle drop";
@@ -64,9 +67,9 @@ const ENDPOINT = {
 };
 
 /* HELPER FUNCTIONS */
-const fromStringKeyToBase58Key = (key) => {
+const fromStringKeyToBase58Key = (key: string) => {
   return base58.encode(
-    new Uint8Array(key.split(",").map((value) => Number(value)))
+    new Uint8Array(key.split(",").map((value: string) => Number(value)))
   );
 };
 
@@ -78,21 +81,30 @@ describe("SolanaTool class", () => {
 
   describe("getter current network function", () => {
     it("should return correct mainnet provider", () => {
-      const solTool = new solana.SolanaTool(null, SOL_NETWORK_PROVIDER.MAINNET);
+      const solTool = new solana.SolanaTool(
+        undefined,
+        SOL_NETWORK_PROVIDER.MAINNET
+      );
       const provider = solTool.getCurrentNetwork();
 
       expect(provider).toBe(SOL_NETWORK_PROVIDER.MAINNET);
     });
 
     it("should return correct devnet provider", () => {
-      const solTool = new solana.SolanaTool(null, SOL_NETWORK_PROVIDER.DEVNET);
+      const solTool = new solana.SolanaTool(
+        undefined,
+        SOL_NETWORK_PROVIDER.DEVNET
+      );
       const provider = solTool.getCurrentNetwork();
 
       expect(provider).toBe(SOL_NETWORK_PROVIDER.DEVNET);
     });
 
     it("should return correct testnet provider", () => {
-      const solTool = new solana.SolanaTool(null, SOL_NETWORK_PROVIDER.TESTNET);
+      const solTool = new solana.SolanaTool(
+        undefined,
+        SOL_NETWORK_PROVIDER.TESTNET
+      );
       const provider = solTool.getCurrentNetwork();
 
       expect(provider).toBe(SOL_NETWORK_PROVIDER.TESTNET);
@@ -102,7 +114,7 @@ describe("SolanaTool class", () => {
   describe("importWallet function", () => {
     describe("importWallet with private key", () => {
       it("should correctly return the wallet when import with main private key", async () => {
-        const solTool = new solana.SolanaTool(null);
+        const solTool = new solana.SolanaTool(undefined);
         const key = fromStringKeyToBase58Key(WALLET_KEY.MAIN);
         const wallet = await solTool.importWallet(key, "key");
 
@@ -114,7 +126,7 @@ describe("SolanaTool class", () => {
       });
 
       it("should correctly return the wallet when import with sub private key", async () => {
-        const solTool = new solana.SolanaTool(null);
+        const solTool = new solana.SolanaTool(undefined);
         const key = fromStringKeyToBase58Key(WALLET_KEY.SUB);
         const wallet = await solTool.importWallet(key, "key");
 
@@ -131,7 +143,7 @@ describe("SolanaTool class", () => {
         const mockedGetBalance = jest.fn().mockResolvedValue(1e9);
         Connection.prototype.getBalance = mockedGetBalance;
 
-        const solTool = new solana.SolanaTool(null);
+        const solTool = new solana.SolanaTool(undefined);
         const wallet = await solTool.importWallet(SECRET_PHRASES, "seedphrase");
 
         expect(solTool.address).toBe(WALLET_ADDRESS.MAIN);
@@ -151,7 +163,7 @@ describe("SolanaTool class", () => {
           });
         Connection.prototype.getBalance = mockedGetBalance;
 
-        const solTool = new solana.SolanaTool(null);
+        const solTool = new solana.SolanaTool(undefined);
         const wallet = await solTool.importWallet(SECRET_PHRASES, "seedphrase");
 
         expect(solTool.address).toBe(WALLET_ADDRESS.SUB);
@@ -213,7 +225,7 @@ describe("SolanaTool class", () => {
       const balance = await solTool.getBalance();
 
       expect(mockedGetBalance).toBeCalledTimes(1);
-      expect(mockedGetBalance).toBeCalledWith(new PublicKey(solTool.address));
+      expect(mockedGetBalance).toBeCalledWith(new PublicKey(solTool.address!));
     });
   });
 
@@ -222,6 +234,8 @@ describe("SolanaTool class", () => {
 
     beforeAll(() => {
       jest.spyOn(solanaWeb3, "sendAndConfirmTransaction");
+
+      // @ts-ignore
       solanaWeb3.sendAndConfirmTransaction = mockedSendAndConfirmTransaction;
     });
 
@@ -261,12 +275,12 @@ describe("clusterApiUrl function", () => {
   });
 
   it("should correctly return URL when cluster parameter is undefined", () => {
-    const url = solana.clusterApiUrl(undefined, false);
+    const url = solana.clusterApiUrl(undefined as unknown as "devnet", false);
     expect(url).toBe(ENDPOINT.http["devnet"]);
   });
 
   it("should correctly return URL when cluster parameter is null", () => {
-    const url = solana.clusterApiUrl(null, true);
+    const url = solana.clusterApiUrl(null as unknown as "devnet", true);
     expect(url).toBe(ENDPOINT.https["devnet"]);
   });
 
@@ -276,12 +290,12 @@ describe("clusterApiUrl function", () => {
   });
 
   it("should return correctly URL when missing all the parameter", () => {
-    const url = solana.clusterApiUrl();
+    const url = solana.clusterApiUrl(undefined as unknown as "devnet");
     expect(url).toBe(ENDPOINT.https["devnet"]);
   });
 
   it("should throw error when the URL cannot be found", () => {
-    expect(() => solana.clusterApiUrl("mainnet", true)).toThrow(
+    expect(() => solana.clusterApiUrl("mainnet" as "devnet", true)).toThrow(
       `Unknown https cluster: mainnet`
     );
   });

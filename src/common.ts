@@ -581,7 +581,7 @@ export class Common {
    * @param tx Transaction to be signed
    * @returns signed Transaction
    */
-  async signTransaction(tx: Transaction): Promise<unknown> {
+  async signTransaction(tx: Transaction): Promise<Transaction | null> {
     try {
       //const wallet = this.wallet;
       // Now we sign the transaction
@@ -720,9 +720,9 @@ export class Common {
    * @returns An object containing totalViews and totalRewards
    */
   async getViewsAndEarnedKOII(
-    nftIdArr: any,
+    nftIdArr: string[],
     attentionState?: any
-  ): Promise<unknown> {
+  ): Promise<{ totalViews: number; totalReward: number }> {
     attentionState = attentionState || (await this.getState("attention"));
     const attentionReport = attentionState.task.attentionReport;
 

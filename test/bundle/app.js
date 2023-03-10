@@ -8,7 +8,7 @@ test().then((result) => {
 
 async function test() {
   await testGetLatestState();
-  await testGenerateWallet();
+  // await testGenerateWallet(); // covered in "common.test.ts" -> "should generate wallet"
   await testGetKoiBalance();
   await testGetWalletBalance();
   await testMint();

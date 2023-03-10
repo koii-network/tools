@@ -8,6 +8,7 @@
     "module": "commonjs",
     "allowJs": true,
     "esModuleInterop": true,
+    "noImplicitAny": true
   },
   "include": [
     "src/*"
