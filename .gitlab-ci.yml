@@ -8,14 +8,13 @@ stages:
 install:
   stage: prerequisites
   script:
-    - yarn install --cache-folder .yarn
+    - npm install
 
   artifacts:
     name: 'artifacts'
     untracked: true
     expire_in: 30 mins
     paths:
-      - .yarn/
       - node_modules/
 
 test:
@@ -23,7 +22,7 @@ test:
   needs: ['install']
 
   script:
-    - yarn run test
+    - npm run test
   dependencies:
     - install
 
@@ -32,7 +31,7 @@ lint:
   needs: ['install']
 
   script:
-    - yarn run lint
+    - npm run lint
   dependencies:
     - install
 
@@ -41,7 +40,7 @@ build:
   needs: ['install']
 
   script:
-    - yarn build
+    - npm build
   artifacts:
     name: 'artifacts'
     untracked: true
@@ -57,4 +56,4 @@ deploy:
     - main
   script:
     - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-    - yarn publish -f --access public
+    - npm publish -f --access public
