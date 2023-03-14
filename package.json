@@ -1,5 +1,5 @@
 {
-  "name": "@_koi/sdk",
+  "name": "@_koii/sdk",
   "version": "2.4.14",
   "description": "Koii SDK",
   "main": "./node/node.js",
