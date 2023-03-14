@@ -56,4 +56,4 @@ deploy:
     - main
   script:
     - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-    - npm publish -f --access public
+    - npm publish --access public
