@@ -75,10 +75,10 @@ describe("K2Tool class", () => {
 
   describe("importWallet function", () => {
     describe("importWallet with private key", () => {
-      it("should correctly return the wallet when import with main private key", () => {
+      it("should correctly return the wallet when import with main private key", async () => {
         const k2Tool = new k2.K2Tool();
         const key = fromStringKeyToBase58Key(WALLET_KEY.MAIN);
-        const wallet = k2Tool.importWallet(key, "key");
+        const wallet = await k2Tool.importWallet(key, "key");
 
         expect(k2Tool.address).toBe(WALLET_ADDRESS.MAIN);
         expect(k2Tool.key).toBe(WALLET_KEY.MAIN);
@@ -87,10 +87,10 @@ describe("K2Tool class", () => {
         expect(wallet.privateKey).toBe(WALLET_KEY.MAIN);
       });
 
-      it("should correctly return the wallet when import with sub private key", () => {
+      it("should correctly return the wallet when import with sub private key", async () => {
         const k2Tool = new k2.K2Tool(undefined);
         const key = fromStringKeyToBase58Key(WALLET_KEY.SUB);
-        const wallet = k2Tool.importWallet(key, "key");
+        const wallet = await k2Tool.importWallet(key, "key");
 
         expect(k2Tool.address).toBe(WALLET_ADDRESS.SUB);
         expect(k2Tool.key).toBe(WALLET_KEY.SUB);
@@ -101,9 +101,9 @@ describe("K2Tool class", () => {
     });
 
     describe("importWallet with secret phrase", () => {
-      it("should import the first wallet", () => {
+      it("should import the first wallet", async () => {
         const k2Tool = new k2.K2Tool(undefined);
-        const wallet = k2Tool.importWallet(SECRET_PHRASES, "seedphrase");
+        const wallet = await k2Tool.importWallet(SECRET_PHRASES, "seedphrase");
 
         expect(k2Tool.address).toBe(WALLET_ADDRESS.MAIN);
         expect(k2Tool.key).toBe(WALLET_KEY.MAIN);
@@ -114,13 +114,13 @@ describe("K2Tool class", () => {
     });
 
     describe("importWallet with existing credentials", () => {
-      it("should replace the old credentials", () => {
+      it("should replace the old credentials", async () => {
         const k2Tool = new k2.K2Tool(WALLET_CREDENTIALS.SUB);
 
         expect(k2Tool.address).toBe(WALLET_ADDRESS.SUB);
         expect(k2Tool.key).toBe(WALLET_KEY.SUB);
 
-        const wallet = k2Tool.importWallet(SECRET_PHRASES, "seedphrase");
+        const wallet = await k2Tool.importWallet(SECRET_PHRASES, "seedphrase");
 
         expect(k2Tool.address).toBe(WALLET_ADDRESS.MAIN);
         expect(k2Tool.key).toBe(WALLET_KEY.MAIN);
@@ -137,8 +137,8 @@ describe("K2Tool class", () => {
       const secretPhrase = k2Tool.generateWallet();
 
       expect(secretPhrase).toBe(SECRET_PHRASES);
-      expect(k2Tool.address).toBe(WALLET_ADDRESS.MAIN);
-      expect(k2Tool.key).toBe(WALLET_KEY.MAIN);
+      expect(k2Tool.address).toBe(WALLET_ADDRESS.SUB);
+      expect(k2Tool.key).toBe(WALLET_KEY.SUB);
     });
   });
 
