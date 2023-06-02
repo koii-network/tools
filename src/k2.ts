@@ -56,7 +56,20 @@ export class K2Tool {
     return this.provider;
   }
 
-  importWallet(key: string, type: ImportMethod): Wallet {
+  generateKoiiCliWallet(key: string) {
+    try {
+      const seed = mnemonicToSeedSync(key);
+      const keypair = Keypair.fromSeed(
+        Uint8Array.from(Uint8Array.from(seed)).slice(0, 32)
+      );
+      return keypair;
+    } catch (err) {
+      console.error("generateKoiiCliWallet", err);
+      return null;
+    }
+  }
+
+  async importWallet(key: string, type: ImportMethod): Promise<Wallet> {
     let keypair;
 
     /* Helper functions */
@@ -66,12 +79,25 @@ export class K2Tool {
     const deriveSeed = (seed: string) =>
       derivePath(DEFAULT_DERIVE_PATH, seed).key;
 
+    const keypairs = [];
+
     if (type === "seedphrase") {
       const seed = mnemonicToSeedSync(key);
       keypair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
+      const koiiCliKeypair = this.generateKoiiCliWallet(key);
+      keypairs.push(keypair);
+      koiiCliKeypair && keypairs.push(koiiCliKeypair);
     } else {
       const secretKey = bs58.decode(key);
       keypair = Keypair.fromSecretKey(secretKey);
+    }
+
+    for (const kp of keypairs) {
+      const balance = await this.connection.getBalance(kp.publicKey);
+      if (balance > 0) {
+        keypair = kp;
+        break;
+      }
     }
 
     this.keypair = keypair;
