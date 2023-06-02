@@ -1,6 +1,6 @@
 {
   "name": "@_koii/sdk",
-  "version": "2.4.16",
+  "version": "2.4.17",
   "description": "Koii SDK",
   "main": "./node/node.js",
   "browser": "./web/web.js",
