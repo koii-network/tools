@@ -112,9 +112,9 @@ export class K2Tool {
     return wallet;
   }
 
-  generateWallet(): string {
+  async generateWallet(): Promise<string> {
     const seedPhrase = generateMnemonic();
-    this.importWallet(seedPhrase, "seedphrase");
+    await this.importWallet(seedPhrase, "seedphrase");
     return seedPhrase;
   }
 
