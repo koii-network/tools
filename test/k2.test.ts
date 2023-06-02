@@ -132,13 +132,13 @@ describe("K2Tool class", () => {
   });
 
   describe("generateWallet function", () => {
-    it("should correctly generate and save the wallet information", () => {
-      const k2Tool = new k2.K2Tool(WALLET_CREDENTIALS.SUB);
-      const secretPhrase = k2Tool.generateWallet();
+    it("should correctly generate and save the wallet information", async () => {
+      const k2Tool = new k2.K2Tool(WALLET_CREDENTIALS.MAIN);
+      const secretPhrase = await k2Tool.generateWallet();
 
       expect(secretPhrase).toBe(SECRET_PHRASES);
-      expect(k2Tool.address).toBe(WALLET_ADDRESS.SUB);
-      expect(k2Tool.key).toBe(WALLET_KEY.SUB);
+      expect(k2Tool.address).toBe(WALLET_ADDRESS.MAIN);
+      expect(k2Tool.key).toBe(WALLET_KEY.MAIN);
     });
   });
 
