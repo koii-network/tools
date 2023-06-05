@@ -1,6 +1,6 @@
-# Koi JavaScript SDK
+# Koii JavaScript SDK
 
-The Koi.js library enables node.js and javascript/typescript applications to easily interact with the open Koi network.
+The Koii.js library enables node.js and javascript/typescript applications to easily interact with the open Koi network.
 
 ## Steps to Interact with the SDK in your Project
 
@@ -9,21 +9,21 @@ The Koi.js library enables node.js and javascript/typescript applications to eas
    You can use either npm or yarn
 
    ```
-   npm i @_koi/sdk
-   yarn add @_koi/sdk
+   npm i @_koii/sdk
+   yarn add @_koii/sdk
    ```
 
 2. Add the Koi-tools module to your script and then initialize the koi class.
 
    ```
-   import * as kweb from "@_koi/sdk/web.js";
+   import * as kweb from "@_koii/sdk/web.js";
    const tools = new kweb.Web();
    ```
 
    or with CommonJS
 
    ```
-   const kweb = require("@_koi/sdk/web");
+   const kweb = require("@_koii/sdk/web");
    const tools = new kweb.Web();
    ```
 
@@ -36,7 +36,7 @@ The Koi.js library enables node.js and javascript/typescript applications to eas
    const tools = new kweb.Web();
    ```
 
-Note: This library changes often, so if `npm i @_koi/sdk` does not work, check for beta releases on NPM under the versions section or manually build the package (See [#Build](#Build) section below).
+Note: This library changes often, so if `npm i @_koii/sdk` does not work, check for beta releases on NPM under the versions section or manually build the package (See [#Build](#Build) section below).
 
 3. Optional - Add the Arweave module to your project if your app plans to directly transact with the permaweb outside of using the Koi-tools library
 
@@ -57,7 +57,6 @@ Note: This library changes often, so if `npm i @_koi/sdk` does not work, check f
    var walletKeyLocation = "path/to/wallet.json";
    ```
 
-   If you don't have a Koii wallet, get one from the faucet at [koi.rocks](https://koi.rocks/faucet).
 
 5. Define a function to bootstrap your app and utilize the koi-tools `loadWallet`.
 
