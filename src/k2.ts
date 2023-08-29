@@ -1,5 +1,4 @@
 import {
-  clusterApiUrl,
   Connection,
   Keypair,
   LAMPORTS_PER_SOL,
@@ -16,6 +15,8 @@ import {
   K2_DEFAULT_DERIVATION_PATH as DEFAULT_DERIVE_PATH,
   ImportMethod
 } from "./constants";
+
+import { k2ClusterApiUrl as clusterApiUrl } from "./utils";
 
 export interface Credentials {
   key: string;
