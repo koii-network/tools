@@ -8,5 +8,9 @@ export function k2ClusterApiUrl(cluster: Cluster, tls?: boolean) {
     return cluster;
   }
 
+  if (cluster === "testnet") {
+    return "https://testnet.koii.live";
+  }
+
   return clusterApiUrl(cluster, tls);
 }
