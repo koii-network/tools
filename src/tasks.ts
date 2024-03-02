@@ -13,6 +13,7 @@ import {
 } from "@_koi/web3.js";
 import fs from "fs";
 import path from "path";
+import { getPayer, getRpcUrl, createKeypairFromFile } from "./utils";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const BufferLayout = require("@solana/buffer-layout");
 const rustString = (property = "string") => {
@@ -61,8 +62,6 @@ const toBuffer = (arr: any) => {
     return Buffer.from(arr);
   }
 };
-import { getPayer, getRpcUrl, createKeypairFromFile } from "./utils";
-
 const SYSTEM_PUBLIC_KEY = new PublicKey("11111111111111111111111111111111");
 const CLOCK_PUBLIC_KEY = new PublicKey(
   "SysvarC1ock11111111111111111111111111111111"
@@ -574,7 +573,7 @@ export async function Whitelist(
   PROGRAM_KEYPAIR_PATH: string,
   isWhitelisted: boolean
 ): Promise<void> {
-  const programKeypair = await createKeypairFromFile(PROGRAM_KEYPAIR_PATH);
+  const programKeypair = await createKeypairFromFile(PROGRAM_KEYPAIR_PATH); // TODO - update to support passing in a wallet resolver for signatures so that clientside libs will work (otherwise this requires having a local key file for all payments)
 
   console.log("WHITELIST", programKeypair.publicKey.toBase58());
   const data = encodeData(TASK_INSTRUCTION_LAYOUTS.Whitelist, {
