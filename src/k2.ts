@@ -11,7 +11,6 @@ import { generateMnemonic, mnemonicToSeedSync } from "bip39";
 import bs58 from "bs58";
 import { derivePath } from "ed25519-hd-key";
 import {
-  K2Provider,
   K2_DEFAULT_DERIVATION_PATH as DEFAULT_DERIVE_PATH,
   ImportMethod
 } from "./constants";
@@ -32,10 +31,10 @@ export class K2Tool {
   key: string | null;
   address: string | null;
   keypair: Keypair | null;
-  provider: K2Provider;
+  rpcUrl: string;
   connection: Connection;
 
-  constructor(credentials?: Credentials, provider?: K2Provider) {
+  constructor(credentials?: Credentials, rpcUrl?: string) {
     this.key = null;
     this.address = null;
     this.keypair = null;
@@ -48,13 +47,14 @@ export class K2Tool {
       );
     }
 
-    if (!provider) provider = "testnet";
-    this.provider = provider || "testnet";
-    this.connection = new Connection(clusterApiUrl(provider), "confirmed");
+    if (!rpcUrl) rpcUrl = "https://testnet.koii.network";
+    this.rpcUrl = rpcUrl;
+
+    this.connection = new Connection(rpcUrl, "confirmed");
   }
 
-  getCurrentNetwork(): K2Provider {
-    return this.provider;
+  getCurrentNetwork(): string {
+    return this.rpcUrl;
   }
 
   generateKoiiCliWallet(key: string) {

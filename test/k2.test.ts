@@ -22,9 +22,9 @@ const {
 
 /* CONSTANTS */
 enum K2_NETWORK_PROVIDER {
-  MAINNET = "mainnet-beta",
-  TESTNET = "testnet",
-  DEVNET = "devnet"
+  MAINNET = "https://mainnet.koii.network",
+  TESTNET = "https://testnet.koii.network",
+  DEVNET = "https://devnet.koii.network"
 }
 
 const SECRET_PHRASES =
