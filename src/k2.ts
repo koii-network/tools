@@ -71,7 +71,7 @@ export class K2Tool {
   async importAllPossibleWallets(
     key: string,
     type: ImportMethod
-  ): Promise<Wallet> {
+  ): Promise<Keypair[]> {
     const bufferToString = (buffer: Buffer) =>
       Buffer.from(buffer).toString("hex");
 
