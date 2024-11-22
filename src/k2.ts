@@ -89,7 +89,10 @@ export class K2Tool {
     } else {
       const secretKey = bs58.decode(key);
       const keypair = Keypair.fromSecretKey(secretKey);
-      wallets.push(keypair);
+
+      this.keypair = keypair;
+      this.address = keypair.publicKey.toString();
+      this.key = keypair.secretKey.toString();
     }
 
     return wallets;
