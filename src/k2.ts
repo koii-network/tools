@@ -15,8 +15,6 @@ import {
   ImportMethod
 } from "./constants";
 
-import { k2ClusterApiUrl as clusterApiUrl } from "./utils";
-
 export interface Credentials {
   key: string;
   address: string;
@@ -70,6 +68,11 @@ export class K2Tool {
     }
   }
 
+  async importAllPossibleWallets(
+    key: string,
+    type: ImportMethod
+  ): Promise<Wallet> {}
+
   async importWallet(key: string, type: ImportMethod): Promise<Wallet> {
     let keypair;
 
@@ -114,6 +117,12 @@ export class K2Tool {
   }
 
   async generateWallet(): Promise<string> {
+    const seedPhrase = generateMnemonic();
+    await this.importWallet(seedPhrase, "seedphrase");
+    return seedPhrase;
+  }
+
+  async generateAllPossibleWallets(): Promise<string[]> {
     const seedPhrase = generateMnemonic();
     await this.importWallet(seedPhrase, "seedphrase");
     return seedPhrase;
