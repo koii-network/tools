@@ -153,9 +153,9 @@ export class K2Tool {
     return seedPhrase;
   }
 
-  async generateAllPossibleWallets(): Promise<string[]> {
+  async generateAllPossibleWallets(): Promise<string> {
     const seedPhrase = generateMnemonic();
-    await this.importWallet(seedPhrase, "seedphrase");
+    await this.importAllPossibleWallets(seedPhrase, "seedphrase");
     return seedPhrase;
   }
 
