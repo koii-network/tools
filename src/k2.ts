@@ -68,10 +68,7 @@ export class K2Tool {
     }
   }
 
-  async importAllPossibleWallets(
-    key: string,
-    type: ImportMethod
-  ): Promise<Keypair[]> {
+  async importAllPossibleWallets(key: string): Promise<Keypair[]> {
     const bufferToString = (buffer: Buffer) =>
       Buffer.from(buffer).toString("hex");
 
@@ -80,20 +77,11 @@ export class K2Tool {
 
     const wallets = [];
 
-    if (type === "seedphrase") {
-      const seed = mnemonicToSeedSync(key);
-      const keypair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
-      const koiiCliKeypair = this.generateKoiiCliWallet(key);
-      wallets.push(keypair);
-      koiiCliKeypair && wallets.push(koiiCliKeypair);
-    } else {
-      const secretKey = bs58.decode(key);
-      const keypair = Keypair.fromSecretKey(secretKey);
-
-      this.keypair = keypair;
-      this.address = keypair.publicKey.toString();
-      this.key = keypair.secretKey.toString();
-    }
+    const seed = mnemonicToSeedSync(key);
+    const keypair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
+    const koiiCliKeypair = this.generateKoiiCliWallet(key);
+    wallets.push(keypair);
+    koiiCliKeypair && wallets.push(koiiCliKeypair);
 
     return wallets;
   }
