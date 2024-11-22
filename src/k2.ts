@@ -78,14 +78,21 @@ export class K2Tool {
     const deriveSeed = (seed: string) =>
       derivePath(DEFAULT_DERIVE_PATH, seed).key;
 
+    const wallets = [];
+
     if (type === "seedphrase") {
       const seed = mnemonicToSeedSync(key);
       const keypair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
       const koiiCliKeypair = this.generateKoiiCliWallet(key);
+      wallets.push(keypair);
+      koiiCliKeypair && wallets.push(koiiCliKeypair);
     } else {
       const secretKey = bs58.decode(key);
       const keypair = Keypair.fromSecretKey(secretKey);
+      wallets.push(keypair);
     }
+
+    return wallets;
   }
 
   async importWallet(key: string, type: ImportMethod): Promise<Wallet> {
