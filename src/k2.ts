@@ -98,6 +98,35 @@ export class K2Tool {
     return wallets;
   }
 
+  importWalletByDerivationPath(key: string, pathType: "default" | "cli") {
+    let keypair;
+    if (pathType === "default") {
+      const bufferToString = (buffer: Buffer) =>
+        Buffer.from(buffer).toString("hex");
+      const deriveSeed = (seed: string) =>
+        derivePath(DEFAULT_DERIVE_PATH, seed).key;
+      const seed = mnemonicToSeedSync(key);
+      keypair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
+    } else if (pathType === "cli") {
+      keypair = this.generateKoiiCliWallet(key);
+    }
+
+    if (!keypair) {
+      throw new Error("Keypair is currently null");
+    }
+
+    this.keypair = keypair;
+    this.address = keypair.publicKey.toString();
+    this.key = keypair.secretKey.toString();
+
+    const wallet = {
+      address: this.address,
+      privateKey: this.key
+    };
+
+    return wallet;
+  }
+
   async selectWallet(keypair: Keypair) {
     this.keypair = keypair;
     this.address = keypair.publicKey.toString();
