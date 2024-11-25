@@ -71,7 +71,7 @@ export class K2Tool {
   async importAllPossibleWallets(key: string): Promise<
     {
       address: string;
-      type: string;
+      pathType: string;
     }[]
   > {
     const bufferToString = (buffer: Buffer) =>
@@ -85,11 +85,14 @@ export class K2Tool {
     const seed = mnemonicToSeedSync(key);
     const keypair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
     const koiiCliKeypair = this.generateKoiiCliWallet(key);
-    wallets.push({ address: keypair.publicKey.toBase58(), type: "default" });
+    wallets.push({
+      address: keypair.publicKey.toBase58(),
+      pathType: "default"
+    });
     koiiCliKeypair &&
       wallets.push({
         address: koiiCliKeypair.publicKey.toBase58(),
-        type: "cli"
+        pathType: "cli"
       });
 
     return wallets;
