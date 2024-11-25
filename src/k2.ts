@@ -98,17 +98,20 @@ export class K2Tool {
     return wallets;
   }
 
-  importWalletByDerivationPath(key: string, pathType: "default" | "cli") {
+  importWalletByDerivationPath(
+    seedphrase: string,
+    pathType: "default" | "cli"
+  ) {
     let keypair;
     if (pathType === "default") {
       const bufferToString = (buffer: Buffer) =>
         Buffer.from(buffer).toString("hex");
       const deriveSeed = (seed: string) =>
         derivePath(DEFAULT_DERIVE_PATH, seed).key;
-      const seed = mnemonicToSeedSync(key);
+      const seed = mnemonicToSeedSync(seedphrase);
       keypair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
     } else if (pathType === "cli") {
-      keypair = this.generateKoiiCliWallet(key);
+      keypair = this.generateKoiiCliWallet(seedphrase);
     }
 
     if (!keypair) {
