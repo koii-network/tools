@@ -98,7 +98,7 @@ export class K2Tool {
     return wallets;
   }
 
-  importWalletByDerivationPath(
+  async importWalletByDerivationPath(
     seedphrase: string,
     pathType: "default" | "cli"
   ) {
@@ -182,12 +182,6 @@ export class K2Tool {
   async generateWallet(): Promise<string> {
     const seedPhrase = generateMnemonic();
     await this.importWallet(seedPhrase, "seedphrase");
-    return seedPhrase;
-  }
-
-  async generateAllPossibleWallets(): Promise<string> {
-    const seedPhrase = generateMnemonic();
-    await this.importAllPossibleWallets(seedPhrase);
     return seedPhrase;
   }
 
