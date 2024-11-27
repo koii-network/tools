@@ -130,12 +130,6 @@ export class K2Tool {
     return wallet;
   }
 
-  async selectWallet(keypair: Keypair) {
-    this.keypair = keypair;
-    this.address = keypair.publicKey.toString();
-    this.key = keypair.secretKey.toString();
-  }
-
   async importWallet(key: string, type: ImportMethod): Promise<Wallet> {
     let keypair;
 
