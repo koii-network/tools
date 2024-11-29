@@ -15,8 +15,6 @@ import {
   ImportMethod
 } from "./constants";
 
-import { k2ClusterApiUrl as clusterApiUrl } from "./utils";
-
 export interface Credentials {
   key: string;
   address: string;
@@ -68,6 +66,68 @@ export class K2Tool {
       console.error("generateKoiiCliWallet", err);
       return null;
     }
+  }
+
+  async importAllPossibleWallets(key: string): Promise<
+    {
+      address: string;
+      pathType: string;
+    }[]
+  > {
+    const bufferToString = (buffer: Buffer) =>
+      Buffer.from(buffer).toString("hex");
+
+    const deriveSeed = (seed: string) =>
+      derivePath(DEFAULT_DERIVE_PATH, seed).key;
+
+    const wallets = [];
+
+    const seed = mnemonicToSeedSync(key);
+    const keypair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
+    const koiiCliKeypair = this.generateKoiiCliWallet(key);
+    wallets.push({
+      address: keypair.publicKey.toBase58(),
+      pathType: "default"
+    });
+    koiiCliKeypair &&
+      wallets.push({
+        address: koiiCliKeypair.publicKey.toBase58(),
+        pathType: "cli"
+      });
+
+    return wallets;
+  }
+
+  async importWalletByDerivationPath(
+    seedphrase: string,
+    pathType: "default" | "cli"
+  ) {
+    let keypair;
+    if (pathType === "default") {
+      const bufferToString = (buffer: Buffer) =>
+        Buffer.from(buffer).toString("hex");
+      const deriveSeed = (seed: string) =>
+        derivePath(DEFAULT_DERIVE_PATH, seed).key;
+      const seed = mnemonicToSeedSync(seedphrase);
+      keypair = Keypair.fromSeed(deriveSeed(bufferToString(seed)));
+    } else if (pathType === "cli") {
+      keypair = this.generateKoiiCliWallet(seedphrase);
+    }
+
+    if (!keypair) {
+      throw new Error("Keypair is currently null");
+    }
+
+    this.keypair = keypair;
+    this.address = keypair.publicKey.toString();
+    this.key = keypair.secretKey.toString();
+
+    const wallet = {
+      address: this.address,
+      privateKey: this.key
+    };
+
+    return wallet;
   }
 
   async importWallet(key: string, type: ImportMethod): Promise<Wallet> {
