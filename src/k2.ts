@@ -45,7 +45,7 @@ export class K2Tool {
       );
     }
 
-    if (!rpcUrl) rpcUrl = "https://testnet.koii.network";
+    if (!rpcUrl) rpcUrl = "https://mainnet.koii.network";
     this.rpcUrl = rpcUrl;
 
     this.connection = new Connection(rpcUrl, "confirmed");
